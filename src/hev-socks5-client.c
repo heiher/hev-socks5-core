@@ -67,7 +67,7 @@ hev_socks5_client_connect_server (HevSocks5Client *self, const char *addr,
 
     LOG_D ("%p socks5 client connect server", self);
 
-    res = hev_socks5_resolve_addr (addr, port, &saddr);
+    res = hev_socks5_resolve_to_sockaddr6 (addr, port, &saddr);
     if (res < 0) {
         LOG_E ("%p socks5 client resolve [%s]:%d", self, addr, port);
         return -1;

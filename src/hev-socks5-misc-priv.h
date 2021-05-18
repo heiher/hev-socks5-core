@@ -25,8 +25,8 @@ int hev_socks5_task_io_yielder (HevTaskYieldType type, void *data);
 
 int hev_socks5_socket (int type);
 
-int hev_socks5_resolve_addr (const char *addr, int port,
-                             struct sockaddr_in6 *saddr);
+int hev_socks5_resolve_to_sockaddr6 (const char *addr, int port,
+                                     struct sockaddr_in6 *saddr);
 
 int hev_socks5_addr_to_sockaddr (HevSocks5Addr *addr, struct sockaddr *saddr);
 int hev_socks5_addr_from_sockaddr (HevSocks5Addr *addr, struct sockaddr *saddr);

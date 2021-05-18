@@ -343,7 +343,7 @@ hev_socks5_server_read_addr_name (HevSocks5Server *self, HevSocks5ReqRes *req,
     name[req->addr.domain.len] = '\0';
     port = ntohs (port);
 
-    res = hev_socks5_resolve_addr (name, port, addr);
+    res = hev_socks5_resolve_to_sockaddr6 (name, port, addr);
     if (res < 0) {
         LOG_E ("%p socks5 server resolve [%s]:%d", self, name, port);
         return -1;
