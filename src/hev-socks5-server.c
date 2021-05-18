@@ -463,9 +463,9 @@ hev_socks5_server_connect (HevSocks5Server *self, struct sockaddr_in6 *addr)
 
     LOG_D ("%p socks5 server connect", self);
 
-    fd = hev_socks5_open_socket (SOCK_STREAM);
+    fd = hev_socks5_socket (SOCK_STREAM);
     if (fd < 0) {
-        LOG_E ("%p socks5 server bind open socket", self);
+        LOG_E ("%p socks5 server socket stream", self);
         return -1;
     }
 
@@ -493,9 +493,9 @@ hev_socks5_server_bind (HevSocks5Server *self)
 
     LOG_D ("%p socks5 server bind", self);
 
-    fd = hev_socks5_open_socket (SOCK_DGRAM);
+    fd = hev_socks5_socket (SOCK_DGRAM);
     if (fd < 0) {
-        LOG_E ("%p socks5 server bind open socket", self);
+        LOG_E ("%p socks5 server socket dgram", self);
         return -1;
     }
 

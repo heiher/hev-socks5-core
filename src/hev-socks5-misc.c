@@ -46,7 +46,7 @@ hev_socks5_task_io_yielder (HevTaskYieldType type, void *data)
 }
 
 int
-hev_socks5_open_socket (int type)
+hev_socks5_socket (int type)
 {
     HevTask *task = hev_task_self ();
     int fd, res;

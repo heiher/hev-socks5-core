@@ -73,9 +73,9 @@ hev_socks5_client_connect_server (HevSocks5Client *self, const char *addr,
         return -1;
     }
 
-    fd = hev_socks5_open_socket (SOCK_STREAM);
+    fd = hev_socks5_socket (SOCK_STREAM);
     if (fd < 0) {
-        LOG_E ("%p socks5 client open socket", self);
+        LOG_E ("%p socks5 client socket", self);
         return -1;
     }
 

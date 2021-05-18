@@ -23,7 +23,8 @@ extern "C" {
 
 int hev_socks5_task_io_yielder (HevTaskYieldType type, void *data);
 
-int hev_socks5_open_socket (int type);
+int hev_socks5_socket (int type);
+
 int hev_socks5_resolve_addr (const char *addr, int port,
                              struct sockaddr_in6 *saddr);
 
