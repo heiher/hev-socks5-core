@@ -14,6 +14,8 @@
 extern "C" {
 #endif
 
+int hev_socks5_task_io_yielder (HevTaskYieldType type, void *data);
+
 #ifdef __cplusplus
 }
 #endif

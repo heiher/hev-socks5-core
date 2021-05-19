@@ -37,7 +37,7 @@ hev_socks5_task_io_yielder (HevTaskYieldType type, void *data)
     } else {
         timeout = hev_task_sleep (timeout);
         if (timeout <= 0) {
-            LOG_E ("%p io timeout", self);
+            LOG_I ("%p io timeout", self);
             return -1;
         }
     }

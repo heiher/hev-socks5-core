@@ -15,13 +15,12 @@
 #include <hev-task.h>
 #include <hev-task-io.h>
 
+#include "hev-socks5-misc.h"
 #include "hev-socks5-proto.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-int hev_socks5_task_io_yielder (HevTaskYieldType type, void *data);
 
 int hev_socks5_socket (int type);
 
