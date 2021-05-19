@@ -160,6 +160,7 @@ main (int argc, char *argv[])
 
 * **HevSocks5Server** - https://github.com/heiher/hev-socks5-server
 * **HevSocks5TProxy** - https://github.com/heiher/hev-socks5-tproxy
+* **HevSocks5Tunnel** - https://github.com/heiher/hev-socks5-tunnel
 
 ## Authors
 * **Heiher** - https://hev.cc
