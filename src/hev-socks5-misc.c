@@ -28,13 +28,16 @@ int
 hev_socks5_task_io_yielder (HevTaskYieldType type, void *data)
 {
     HevSocks5 *self = data;
-    int timeout;
 
-    timeout = self->timeout;
+    if (type == HEV_TASK_YIELD) {
+        hev_task_yield (HEV_TASK_YIELD);
+        return 0;
+    }
 
-    if (timeout < 0) {
+    if (self->timeout < 0) {
         hev_task_yield (HEV_TASK_WAITIO);
     } else {
+        int timeout = self->timeout;
         timeout = hev_task_sleep (timeout);
         if (timeout <= 0) {
             LOG_I ("%p io timeout", self);
