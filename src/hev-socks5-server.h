@@ -36,12 +36,6 @@ struct _HevSocks5Server
     int fd;
     int timeout;
     HevSocks5ServerType type;
-
-    struct
-    {
-        const char *user;
-        const char *pass;
-    } auth;
 };
 
 struct _HevSocks5ServerClass
@@ -55,9 +49,6 @@ void hev_socks5_server_destruct (HevSocks5 *base);
 HevSocks5Server *hev_socks5_server_new (int fd);
 
 void hev_socks5_server_set_connect_timeout (HevSocks5Server *self, int timeout);
-
-void hev_socks5_server_set_auth_user_pass (HevSocks5Server *self,
-                                           const char *user, const char *pass);
 
 int hev_socks5_server_run (HevSocks5Server *self);
 

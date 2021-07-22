@@ -93,14 +93,6 @@ hev_socks5_server_set_connect_timeout (HevSocks5Server *self, int timeout)
     self->timeout = timeout;
 }
 
-void
-hev_socks5_server_set_auth_user_pass (HevSocks5Server *self, const char *user,
-                                      const char *pass)
-{
-    self->auth.user = user;
-    self->auth.pass = pass;
-}
-
 static int
 hev_socks5_server_read_auth_method (HevSocks5Server *self)
 {
@@ -132,7 +124,7 @@ hev_socks5_server_read_auth_method (HevSocks5Server *self)
     }
 
     method = HEV_SOCKS5_AUTH_METHOD_NONE;
-    if (self->auth.user && self->auth.pass)
+    if (self->base.auth.user && self->base.auth.pass)
         method = HEV_SOCKS5_AUTH_METHOD_USER;
 
     res = -1;
@@ -208,7 +200,7 @@ hev_socks5_server_read_auth_user (HevSocks5Server *self)
     }
 
     buf[ulen] = '\0';
-    if (strcmp (self->auth.user, (char *)buf) != 0) {
+    if (strcmp (self->base.auth.user, (char *)buf) != 0) {
         LOG_E ("%p socks5 server auth user %s", self, buf);
         return -1;
     }
@@ -221,7 +213,7 @@ hev_socks5_server_read_auth_user (HevSocks5Server *self)
     }
 
     buf[plen] = '\0';
-    if (strcmp (self->auth.pass, (char *)buf) != 0) {
+    if (strcmp (self->base.auth.pass, (char *)buf) != 0) {
         LOG_E ("%p socks5 server auth pass %s", self, buf);
         return -1;
     }

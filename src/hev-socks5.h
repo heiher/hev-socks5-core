@@ -28,6 +28,12 @@ struct _HevSocks5
     int fd;
     int timeout;
     int ref_count;
+
+    struct
+    {
+        const char *user;
+        const char *pass;
+    } auth;
 };
 
 struct _HevSocks5Class
@@ -45,6 +51,9 @@ void hev_socks5_unref (HevSocks5 *self);
 
 int hev_socks5_get_timeout (HevSocks5 *self);
 void hev_socks5_set_timeout (HevSocks5 *self, int timeout);
+
+void hev_socks5_set_auth_user_pass (HevSocks5 *self, const char *user,
+                                    const char *pass);
 
 #ifdef __cplusplus
 }
