@@ -125,11 +125,11 @@ udp_client_entry (void *data)
      *
      * recv udp packet: (with source address family AF_INET6)
      *     addr.sa_family = AF_INET6;
-     *     hev_socks5_udp_recvfom (HEV_SOCKS5_UDP (udp), data, len, addr);
+     *     hev_socks5_udp_recvfrom (HEV_SOCKS5_UDP (udp), data, len, addr);
      *
-     * recv udp packet: (with source address family AF_INET, maybe not enough)
+     * recv udp packet: (with source address family AF_INET for IPv4 only)
      *     addr.sa_family = AF_INET;
-     *     hev_socks5_udp_recvfom (HEV_SOCKS5_UDP (udp), data, len, addr);
+     *     hev_socks5_udp_recvfrom (HEV_SOCKS5_UDP (udp), data, len, addr);
      */
 
     hev_socks5_unref (HEV_SOCKS5 (udp));
