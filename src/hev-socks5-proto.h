@@ -39,6 +39,11 @@ enum _HevSocks5AuthMethod
     HEV_SOCKS5_AUTH_METHOD_DENY = 255,
 };
 
+enum _HevSocks5AuthVersion
+{
+    HEV_SOCKS5_AUTH_VERSION_1 = 1,
+};
+
 enum _HevSocks5ReqCmd
 {
     HEV_SOCKS5_REQ_CMD_CONNECT = 1,

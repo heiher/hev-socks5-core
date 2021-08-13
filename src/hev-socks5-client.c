@@ -110,7 +110,20 @@ hev_socks5_client_write_request (HevSocks5Client *self)
 
     auth.ver = HEV_SOCKS5_VERSION_5;
     auth.method_len = 1;
-    auth.methods[0] = HEV_SOCKS5_AUTH_METHOD_NONE;
+
+    if (self->base.auth.user && self->base.auth.pass) {
+        //Based on https://datatracker.ietf.org/doc/html/rfc1929
+
+        auth.methods[0] = HEV_SOCKS5_AUTH_METHOD_USER;
+
+        auth.methods[1] = HEV_SOCKS5_AUTH_VERSION_1;
+        auth.methods[2] = strlen(self->base.auth.user);
+        strncpy((char *)&auth.methods[3], self->base.auth.user, auth.methods[2]);
+        auth.methods[2+auth.methods[2]+1] = strlen(self->base.auth.pass);
+        strncpy((char *)&auth.methods[2+auth.methods[2]+2], self->base.auth.pass, auth.methods[2+auth.methods[2]+1]);
+    } else {
+        auth.methods[0] = HEV_SOCKS5_AUTH_METHOD_NONE;
+    }
 
     req.ver = HEV_SOCKS5_VERSION_5;
     req.rsv = 0;
@@ -148,6 +161,10 @@ hev_socks5_client_write_request (HevSocks5Client *self)
 
     iov[0].iov_base = &auth;
     iov[0].iov_len = 3;
+
+    if (auth.methods[0] == HEV_SOCKS5_AUTH_METHOD_USER)
+        iov[0].iov_len += ((2+auth.methods[2]+2)+auth.methods[2+auth.methods[2]+1]);
+
     iov[1].iov_base = &req;
     iov[1].iov_len = 3;
     iov[2].iov_base = addr;
@@ -187,6 +204,26 @@ hev_socks5_client_read_response (HevSocks5Client *self)
         return -1;
     }
 
+    if (auth.method == HEV_SOCKS5_AUTH_METHOD_USER) {
+        ret = hev_task_io_socket_recv (HEV_SOCKS5 (self)->fd, &res, 2, MSG_WAITALL,
+                                   task_io_yielder, self);
+        if (ret <= 0) {
+            LOG_E ("%p socks5 client read auth responce", self);
+            return -1;
+        }
+
+        if (res.ver != HEV_SOCKS5_AUTH_VERSION_1) {
+            LOG_E ("%p socks5 client auth.res.ver %u", self, auth.ver);
+            return -1;
+        }
+
+        if (res.rep != HEV_SOCKS5_RES_REP_SUCC) {
+            LOG_E ("%p socks5 client auth.res.rep %u", self, auth.ver);
+            return -1;
+        }
+
+        LOG_D ("%p socks5 client auth done", self);
+    } else
     if (auth.method != HEV_SOCKS5_AUTH_METHOD_NONE) {
         LOG_E ("%p socks5 client auth.method %u", self, auth.method);
         return -1;
