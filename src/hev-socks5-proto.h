@@ -18,6 +18,7 @@ extern "C" {
 
 typedef enum _HevSocks5Version HevSocks5Version;
 typedef enum _HevSocks5AuthMethod HevSocks5AuthMethod;
+typedef enum _HevSocks5AuthVersion HevSocks5AuthVersion;
 typedef enum _HevSocks5ReqCmd HevSocks5ReqCmd;
 typedef enum _HevSocks5ResRep HevSocks5ResRep;
 typedef enum _HevSocks5AddrType HevSocks5AddrType;
@@ -37,6 +38,11 @@ enum _HevSocks5AuthMethod
     HEV_SOCKS5_AUTH_METHOD_NONE = 0,
     HEV_SOCKS5_AUTH_METHOD_USER = 2,
     HEV_SOCKS5_AUTH_METHOD_DENY = 255,
+};
+
+enum _HevSocks5AuthVersion
+{
+    HEV_SOCKS5_AUTH_VERSION_1 = 1,
 };
 
 enum _HevSocks5ReqCmd
