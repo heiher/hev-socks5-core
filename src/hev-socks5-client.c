@@ -26,6 +26,7 @@ static int
 hev_socks5_client_connect_server (HevSocks5Client *self, const char *addr,
                                   int port)
 {
+    HevSocks5Class *klass;
     struct sockaddr_in6 saddr;
     struct sockaddr *sap;
     int fd, res;
@@ -41,6 +42,14 @@ hev_socks5_client_connect_server (HevSocks5Client *self, const char *addr,
     fd = hev_socks5_socket (SOCK_STREAM);
     if (fd < 0) {
         LOG_E ("%p socks5 client socket", self);
+        return -1;
+    }
+
+    klass = HEV_SOCKS5_GET_CLASS (self);
+    res = klass->binder (HEV_SOCKS5 (self), fd);
+    if (res < 0) {
+        LOG_E ("%p socks5 client bind", self);
+        close (fd);
         return -1;
     }
 
