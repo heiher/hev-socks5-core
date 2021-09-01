@@ -16,8 +16,8 @@
 
 #include "hev-socks5-client-tcp.h"
 
-static HevSocks5ClientTCP *
-hev_socks5_client_tcp_new_internal (void)
+HevSocks5ClientTCP *
+hev_socks5_client_tcp_new (const char *addr, int port)
 {
     HevSocks5ClientTCP *self;
     int res;
@@ -26,45 +26,13 @@ hev_socks5_client_tcp_new_internal (void)
     if (!self)
         return NULL;
 
-    LOG_D ("%p socks5 client tcp new internal", self);
-
-    res = hev_socks5_client_tcp_construct (self);
+    res = hev_socks5_client_tcp_construct (self, addr, port);
     if (res < 0) {
         hev_free (self);
         return NULL;
     }
 
-    return self;
-}
-
-HevSocks5ClientTCP *
-hev_socks5_client_tcp_new (const char *addr, int port)
-{
-    HevSocks5ClientTCP *self;
-    HevSocks5Addr *s5addr;
-    int addrlen;
-    int nport;
-
-    addrlen = strlen (addr);
-    s5addr = hev_malloc (4 + addrlen);
-    if (!s5addr)
-        return NULL;
-
-    nport = htons (port);
-    s5addr->atype = HEV_SOCKS5_ADDR_TYPE_NAME;
-    s5addr->domain.len = addrlen;
-    memcpy (s5addr->domain.addr, addr, addrlen);
-    memcpy (s5addr->domain.addr + addrlen, &nport, 2);
-
-    self = hev_socks5_client_tcp_new_internal ();
-    if (!self) {
-        hev_free (s5addr);
-        return NULL;
-    }
-
     LOG_I ("%p socks5 client tcp new [%s]:%d", self, addr, port);
-
-    self->addr = s5addr;
 
     return self;
 }
@@ -73,22 +41,15 @@ HevSocks5ClientTCP *
 hev_socks5_client_tcp_new_ip (struct sockaddr *addr)
 {
     HevSocks5ClientTCP *self;
-    HevSocks5Addr *s5addr;
     int res;
 
-    s5addr = hev_malloc (19);
-    if (!s5addr)
+    self = hev_malloc0 (sizeof (HevSocks5ClientTCP));
+    if (!self)
         return NULL;
 
-    res = hev_socks5_addr_from_sockaddr (s5addr, addr);
-    if (res <= 0) {
-        hev_free (s5addr);
-        return NULL;
-    }
-
-    self = hev_socks5_client_tcp_new_internal ();
-    if (!self) {
-        hev_free (s5addr);
+    res = hev_socks5_client_tcp_construct_ip (self, addr);
+    if (res < 0) {
+        hev_free (self);
         return NULL;
     }
 
@@ -96,11 +57,9 @@ hev_socks5_client_tcp_new_ip (struct sockaddr *addr)
         char buf[128];
         const char *str;
 
-        str = hev_socks5_addr_to_string (s5addr, buf, sizeof (buf));
+        str = hev_socks5_addr_to_string (self->addr, buf, sizeof (buf));
         LOG_I ("%p socks5 client tcp new ip %s", self, str);
     }
-
-    self->addr = s5addr;
 
     return self;
 }
@@ -118,8 +77,11 @@ hev_socks5_client_tcp_get_upstream_addr (HevSocks5Client *base)
 }
 
 int
-hev_socks5_client_tcp_construct (HevSocks5ClientTCP *self)
+hev_socks5_client_tcp_construct (HevSocks5ClientTCP *self, const char *addr,
+                                 int port)
 {
+    int addrlen;
+    int nport;
     int res;
 
     res = hev_socks5_client_construct (&self->base, HEV_SOCKS5_CLIENT_TYPE_TCP);
@@ -129,6 +91,44 @@ hev_socks5_client_tcp_construct (HevSocks5ClientTCP *self)
     LOG_D ("%p socks5 client tcp construct", self);
 
     HEV_SOCKS5 (self)->klass = hev_socks5_client_tcp_get_class ();
+
+    addrlen = strlen (addr);
+    self->addr = hev_malloc (4 + addrlen);
+    if (!self->addr)
+        return -1;
+
+    nport = htons (port);
+    self->addr->atype = HEV_SOCKS5_ADDR_TYPE_NAME;
+    self->addr->domain.len = addrlen;
+    memcpy (self->addr->domain.addr, addr, addrlen);
+    memcpy (self->addr->domain.addr + addrlen, &nport, 2);
+
+    return 0;
+}
+
+int
+hev_socks5_client_tcp_construct_ip (HevSocks5ClientTCP *self,
+                                    struct sockaddr *addr)
+{
+    int res;
+
+    res = hev_socks5_client_construct (&self->base, HEV_SOCKS5_CLIENT_TYPE_TCP);
+    if (res < 0)
+        return res;
+
+    LOG_D ("%p socks5 client tcp construct ip", self);
+
+    HEV_SOCKS5 (self)->klass = hev_socks5_client_tcp_get_class ();
+
+    self->addr = hev_malloc (19);
+    if (!self->addr)
+        return -1;
+
+    res = hev_socks5_addr_from_sockaddr (self->addr, addr);
+    if (res <= 0) {
+        hev_free (self->addr);
+        return -1;
+    }
 
     return 0;
 }
