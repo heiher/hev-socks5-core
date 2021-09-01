@@ -41,6 +41,7 @@ struct _HevSocks5Class
     const char *name;
 
     void (*finalizer) (HevSocks5 *self);
+    int (*binder) (HevSocks5 *self, int sock);
 };
 
 HevSocks5Class *hev_socks5_get_class (void);

@@ -68,6 +68,12 @@ hev_socks5_set_auth_user_pass (HevSocks5 *self, const char *user,
     self->auth.pass = pass;
 }
 
+static int
+hev_socks5_bind (HevSocks5 *self, int sock)
+{
+    return 0;
+}
+
 int
 hev_socks5_construct (HevSocks5 *self)
 {
@@ -101,6 +107,7 @@ hev_socks5_get_class (void)
     if (!kptr->name) {
         kptr->name = "HevSocks5";
         kptr->finalizer = hev_socks5_destruct;
+        kptr->binder = hev_socks5_bind;
     }
 
     return kptr;
