@@ -35,15 +35,13 @@ hev_socks5_server_new (int fd)
     if (!self)
         return NULL;
 
-    LOG_D ("%p socks5 server new", self);
-
-    res = hev_socks5_server_construct (self);
+    res = hev_socks5_server_construct (self, fd);
     if (res < 0) {
         hev_free (self);
         return NULL;
     }
 
-    HEV_SOCKS5 (self)->fd = fd;
+    LOG_D ("%p socks5 server new", self);
 
     return self;
 }
@@ -565,7 +563,7 @@ hev_socks5_server_run (HevSocks5Server *self)
 }
 
 int
-hev_socks5_server_construct (HevSocks5Server *self)
+hev_socks5_server_construct (HevSocks5Server *self, int fd)
 {
     int res;
 
@@ -576,6 +574,8 @@ hev_socks5_server_construct (HevSocks5Server *self)
     LOG_D ("%p socks5 server construct", self);
 
     HEV_SOCKS5 (self)->klass = hev_socks5_server_get_class ();
+
+    HEV_SOCKS5 (self)->fd = fd;
 
     self->fd = -1;
     self->timeout = -1;

@@ -45,7 +45,7 @@ struct _HevSocks5ServerClass
 
 HevSocks5Class *hev_socks5_server_get_class (void);
 
-int hev_socks5_server_construct (HevSocks5Server *self);
+int hev_socks5_server_construct (HevSocks5Server *self, int fd);
 
 HevSocks5Server *hev_socks5_server_new (int fd);
 
