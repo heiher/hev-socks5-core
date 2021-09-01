@@ -31,7 +31,7 @@ hev_socks5_client_udp_new (void)
         return NULL;
     }
 
-    LOG_I ("%p socks5 client udp new", self);
+    LOG_D ("%p socks5 client udp new", self);
 
     return self;
 }
@@ -57,7 +57,7 @@ hev_socks5_client_udp_construct (HevSocks5ClientUDP *self)
     if (res < 0)
         return res;
 
-    LOG_D ("%p socks5 client udp construct", self);
+    LOG_I ("%p socks5 client udp construct", self);
 
     HEV_OBJECT (self)->klass = HEV_SOCKS5_CLIENT_UDP_TYPE;
 
