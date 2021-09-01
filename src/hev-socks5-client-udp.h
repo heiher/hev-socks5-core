@@ -18,6 +18,7 @@ extern "C" {
 
 #define HEV_SOCKS5_CLIENT_UDP(p) ((HevSocks5ClientUDP *)p)
 #define HEV_SOCKS5_CLIENT_UDP_CLASS(p) ((HevSocks5ClientUDPClass *)p)
+#define HEV_SOCKS5_CLIENT_UDP_TYPE (hev_socks5_client_udp_class ())
 
 typedef struct _HevSocks5ClientUDP HevSocks5ClientUDP;
 typedef struct _HevSocks5ClientUDPClass HevSocks5ClientUDPClass;
@@ -32,7 +33,7 @@ struct _HevSocks5ClientUDPClass
     HevSocks5ClientClass base;
 };
 
-HevSocks5Class *hev_socks5_client_udp_get_class (void);
+HevObjectClass *hev_socks5_client_udp_class (void);
 
 int hev_socks5_client_udp_construct (HevSocks5ClientUDP *self);
 

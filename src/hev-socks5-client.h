@@ -19,6 +19,7 @@ extern "C" {
 
 #define HEV_SOCKS5_CLIENT(p) ((HevSocks5Client *)p)
 #define HEV_SOCKS5_CLIENT_CLASS(p) ((HevSocks5ClientClass *)p)
+#define HEV_SOCKS5_CLIENT_TYPE (hev_socks5_client_class ())
 
 typedef struct _HevSocks5Client HevSocks5Client;
 typedef struct _HevSocks5ClientClass HevSocks5ClientClass;
@@ -44,7 +45,7 @@ struct _HevSocks5ClientClass
     HevSocks5Addr *(*get_upstream_addr) (HevSocks5Client *self);
 };
 
-HevSocks5Class *hev_socks5_client_get_class (void);
+HevObjectClass *hev_socks5_client_class (void);
 
 int hev_socks5_client_construct (HevSocks5Client *self,
                                  HevSocks5ClientType type);

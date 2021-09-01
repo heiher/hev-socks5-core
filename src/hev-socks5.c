@@ -22,32 +22,6 @@
 
 #include "hev-socks5.h"
 
-HevSocks5 *
-hev_socks5_ref (HevSocks5 *self)
-{
-    self->ref_count++;
-
-    LOG_D ("%p socks5 ref++ %u", self, self->ref_count);
-
-    return self;
-}
-
-void
-hev_socks5_unref (HevSocks5 *self)
-{
-    HevSocks5Class *klass = HEV_SOCKS5_GET_CLASS (self);
-
-    self->ref_count--;
-
-    LOG_D ("%p socks5 ref-- %u", self, self->ref_count);
-
-    if (self->ref_count > 0)
-        return;
-
-    if (klass->finalizer)
-        klass->finalizer (self);
-}
-
 int
 hev_socks5_get_timeout (HevSocks5 *self)
 {
@@ -77,38 +51,51 @@ hev_socks5_bind (HevSocks5 *self, int sock)
 int
 hev_socks5_construct (HevSocks5 *self)
 {
+    int res;
+
+    res = hev_object_construct (&self->base);
+    if (res < 0)
+        return res;
+
     LOG_D ("%p socks5 construct", self);
 
-    HEV_SOCKS5 (self)->klass = hev_socks5_get_class ();
+    HEV_OBJECT (self)->klass = HEV_SOCKS5_TYPE;
 
     self->fd = -1;
     self->timeout = -1;
-    self->ref_count = 1;
 
     return 0;
 }
 
 static void
-hev_socks5_destruct (HevSocks5 *self)
+hev_socks5_destruct (HevObject *base)
 {
+    HevSocks5 *self = HEV_SOCKS5 (base);
+
     LOG_D ("%p socks5 destruct", self);
 
     if (self->fd >= 0)
         close (self->fd);
-    hev_free (self);
+
+    HEV_OBJECT_TYPE->finalizer (base);
+    hev_free (base);
 }
 
-HevSocks5Class *
-hev_socks5_get_class (void)
+HevObjectClass *
+hev_socks5_class (void)
 {
     static HevSocks5Class klass;
     HevSocks5Class *kptr = &klass;
+    HevObjectClass *okptr = HEV_OBJECT_CLASS (kptr);
 
-    if (!kptr->name) {
-        kptr->name = "HevSocks5";
-        kptr->finalizer = hev_socks5_destruct;
+    if (!okptr->name) {
+        memcpy (kptr, HEV_OBJECT_TYPE, sizeof (HevObjectClass));
+
+        okptr->name = "HevSocks5";
+        okptr->finalizer = hev_socks5_destruct;
+
         kptr->binder = hev_socks5_bind;
     }
 
-    return kptr;
+    return okptr;
 }

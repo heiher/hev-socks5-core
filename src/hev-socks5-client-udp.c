@@ -59,42 +59,39 @@ hev_socks5_client_udp_construct (HevSocks5ClientUDP *self)
 
     LOG_D ("%p socks5 client udp construct", self);
 
-    HEV_SOCKS5 (self)->klass = hev_socks5_client_udp_get_class ();
+    HEV_OBJECT (self)->klass = HEV_SOCKS5_CLIENT_UDP_TYPE;
 
     return 0;
 }
 
 static void
-hev_socks5_client_udp_destruct (HevSocks5 *base)
+hev_socks5_client_udp_destruct (HevObject *base)
 {
     HevSocks5ClientUDP *self = HEV_SOCKS5_CLIENT_UDP (base);
 
     LOG_D ("%p socks5 client udp destruct", self);
 
-    hev_socks5_client_get_class ()->finalizer (base);
+    HEV_SOCKS5_CLIENT_TYPE->finalizer (base);
 }
 
-HevSocks5Class *
-hev_socks5_client_udp_get_class (void)
+HevObjectClass *
+hev_socks5_client_udp_class (void)
 {
     static HevSocks5ClientUDPClass klass;
     HevSocks5ClientUDPClass *kptr = &klass;
+    HevObjectClass *okptr = HEV_OBJECT_CLASS (kptr);
 
-    if (!HEV_SOCKS5_CLASS (kptr)->name) {
+    if (!okptr->name) {
         HevSocks5ClientClass *ckptr;
-        HevSocks5Class *skptr;
-        void *ptr;
 
-        ptr = hev_socks5_client_get_class ();
-        memcpy (kptr, ptr, sizeof (HevSocks5ClientClass));
+        memcpy (kptr, HEV_SOCKS5_CLIENT_TYPE, sizeof (HevSocks5ClientClass));
 
-        skptr = HEV_SOCKS5_CLASS (kptr);
-        skptr->name = "HevSocks5ClientUDP";
-        skptr->finalizer = hev_socks5_client_udp_destruct;
+        okptr->name = "HevSocks5ClientUDP";
+        okptr->finalizer = hev_socks5_client_udp_destruct;
 
         ckptr = HEV_SOCKS5_CLIENT_CLASS (kptr);
         ckptr->get_upstream_addr = hev_socks5_client_udp_get_upstream_addr;
     }
 
-    return HEV_SOCKS5_CLASS (kptr);
+    return okptr;
 }

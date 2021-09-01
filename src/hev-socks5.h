@@ -10,24 +10,25 @@
 #ifndef __HEV_SOCKS5_H__
 #define __HEV_SOCKS5_H__
 
+#include "hev-object.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #define HEV_SOCKS5(p) ((HevSocks5 *)p)
 #define HEV_SOCKS5_CLASS(p) ((HevSocks5Class *)p)
-#define HEV_SOCKS5_GET_CLASS(p) ((void *)((HevSocks5 *)p)->klass)
+#define HEV_SOCKS5_TYPE (hev_socks5_class ())
 
 typedef struct _HevSocks5 HevSocks5;
 typedef struct _HevSocks5Class HevSocks5Class;
 
 struct _HevSocks5
 {
-    HevSocks5Class *klass;
+    HevObject base;
 
     int fd;
     int timeout;
-    int ref_count;
 
     struct
     {
@@ -38,18 +39,14 @@ struct _HevSocks5
 
 struct _HevSocks5Class
 {
-    const char *name;
+    HevObjectClass base;
 
-    void (*finalizer) (HevSocks5 *self);
     int (*binder) (HevSocks5 *self, int sock);
 };
 
-HevSocks5Class *hev_socks5_get_class (void);
+HevObjectClass *hev_socks5_class (void);
 
 int hev_socks5_construct (HevSocks5 *self);
-
-HevSocks5 *hev_socks5_ref (HevSocks5 *self);
-void hev_socks5_unref (HevSocks5 *self);
 
 int hev_socks5_get_timeout (HevSocks5 *self);
 void hev_socks5_set_timeout (HevSocks5 *self, int timeout);

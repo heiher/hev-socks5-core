@@ -18,6 +18,7 @@ extern "C" {
 
 #define HEV_SOCKS5_SERVER(p) ((HevSocks5Server *)p)
 #define HEV_SOCKS5_SERVER_CLASS(p) ((HevSocks5ServerClass *)p)
+#define HEV_SOCKS5_SERVER_TYPE (hev_socks5_server_class ())
 
 typedef struct _HevSocks5Server HevSocks5Server;
 typedef struct _HevSocks5ServerClass HevSocks5ServerClass;
@@ -43,7 +44,7 @@ struct _HevSocks5ServerClass
     HevSocks5Class base;
 };
 
-HevSocks5Class *hev_socks5_server_get_class (void);
+HevObjectClass *hev_socks5_server_class (void);
 
 int hev_socks5_server_construct (HevSocks5Server *self, int fd);
 

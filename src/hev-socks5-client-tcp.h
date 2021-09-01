@@ -20,6 +20,7 @@ extern "C" {
 
 #define HEV_SOCKS5_CLIENT_TCP(p) ((HevSocks5ClientTCP *)p)
 #define HEV_SOCKS5_CLIENT_TCP_CLASS(p) ((HevSocks5ClientTCPClass *)p)
+#define HEV_SOCKS5_CLIENT_TCP_TYPE (hev_socks5_client_tcp_class ())
 
 typedef struct _HevSocks5ClientTCP HevSocks5ClientTCP;
 typedef struct _HevSocks5ClientTCPClass HevSocks5ClientTCPClass;
@@ -36,7 +37,7 @@ struct _HevSocks5ClientTCPClass
     HevSocks5ClientClass base;
 };
 
-HevSocks5Class *hev_socks5_client_tcp_get_class (void);
+HevObjectClass *hev_socks5_client_tcp_class (void);
 
 int hev_socks5_client_tcp_construct (HevSocks5ClientTCP *self, const char *addr,
                                      int port);

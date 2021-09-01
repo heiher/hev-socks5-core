@@ -421,7 +421,7 @@ hev_socks5_server_connect (HevSocks5Server *self, struct sockaddr_in6 *addr)
         return -1;
     }
 
-    klass = HEV_SOCKS5_GET_CLASS (self);
+    klass = HEV_OBJECT_GET_CLASS (self);
     res = klass->binder (HEV_SOCKS5 (self), fd);
     if (res < 0) {
         LOG_E ("%p socks5 server bind", self);
@@ -461,7 +461,7 @@ hev_socks5_server_bind (HevSocks5Server *self)
         return -1;
     }
 
-    klass = HEV_SOCKS5_GET_CLASS (self);
+    klass = HEV_OBJECT_GET_CLASS (self);
     res = klass->binder (HEV_SOCKS5 (self), fd);
     if (res < 0) {
         LOG_E ("%p socks5 server bind", self);
@@ -573,7 +573,7 @@ hev_socks5_server_construct (HevSocks5Server *self, int fd)
 
     LOG_D ("%p socks5 server construct", self);
 
-    HEV_SOCKS5 (self)->klass = hev_socks5_server_get_class ();
+    HEV_OBJECT (self)->klass = HEV_SOCKS5_SERVER_TYPE;
 
     HEV_SOCKS5 (self)->fd = fd;
 
@@ -584,7 +584,7 @@ hev_socks5_server_construct (HevSocks5Server *self, int fd)
 }
 
 static void
-hev_socks5_server_destruct (HevSocks5 *base)
+hev_socks5_server_destruct (HevObject *base)
 {
     HevSocks5Server *self = HEV_SOCKS5_SERVER (base);
 
@@ -593,26 +593,22 @@ hev_socks5_server_destruct (HevSocks5 *base)
     if (self->fd >= 0)
         close (self->fd);
 
-    hev_socks5_get_class ()->finalizer (base);
+    HEV_SOCKS5_TYPE->finalizer (base);
 }
 
-HevSocks5Class *
-hev_socks5_server_get_class (void)
+HevObjectClass *
+hev_socks5_server_class (void)
 {
     static HevSocks5ServerClass klass;
     HevSocks5ServerClass *kptr = &klass;
+    HevObjectClass *okptr = HEV_OBJECT_CLASS (kptr);
 
-    if (!HEV_SOCKS5_CLASS (kptr)->name) {
-        HevSocks5Class *skptr;
-        void *ptr;
+    if (!okptr->name) {
+        memcpy (kptr, HEV_SOCKS5_TYPE, sizeof (HevSocks5Class));
 
-        ptr = hev_socks5_get_class ();
-        memcpy (kptr, ptr, sizeof (HevSocks5Class));
-
-        skptr = HEV_SOCKS5_CLASS (kptr);
-        skptr->name = "HevSocks5Server";
-        skptr->finalizer = hev_socks5_server_destruct;
+        okptr->name = "HevSocks5Server";
+        okptr->finalizer = hev_socks5_server_destruct;
     }
 
-    return HEV_SOCKS5_CLASS (kptr);
+    return okptr;
 }

@@ -28,7 +28,7 @@ server_entry (void *data)
 {
     HevSocks5Server *server = data;
     hev_socks5_server_run (server);
-    hev_socks5_unref (HEV_SOCKS5 (server));
+    hev_object_unref (HEV_OBJECT (server));
 }
 
 static void
@@ -107,7 +107,7 @@ tcp_client_entry (void *data)
      *     hev_socks5_tcp_splice (HEV_SOCKS5_TCP (tcp), fd);
      */
 
-    hev_socks5_unref (HEV_SOCKS5 (tcp));
+    hev_object_unref (HEV_OBJECT (tcp));
 }
 
 static void
@@ -132,7 +132,7 @@ udp_client_entry (void *data)
      *     hev_socks5_udp_recvfrom (HEV_SOCKS5_UDP (udp), data, len, addr);
      */
 
-    hev_socks5_unref (HEV_SOCKS5 (udp));
+    hev_object_unref (HEV_OBJECT (udp));
 }
 
 int

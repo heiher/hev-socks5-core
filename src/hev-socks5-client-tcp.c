@@ -90,7 +90,7 @@ hev_socks5_client_tcp_construct (HevSocks5ClientTCP *self, const char *addr,
 
     LOG_D ("%p socks5 client tcp construct", self);
 
-    HEV_SOCKS5 (self)->klass = hev_socks5_client_tcp_get_class ();
+    HEV_OBJECT (self)->klass = HEV_SOCKS5_CLIENT_TCP_TYPE;
 
     addrlen = strlen (addr);
     self->addr = hev_malloc (4 + addrlen);
@@ -118,7 +118,7 @@ hev_socks5_client_tcp_construct_ip (HevSocks5ClientTCP *self,
 
     LOG_D ("%p socks5 client tcp construct ip", self);
 
-    HEV_SOCKS5 (self)->klass = hev_socks5_client_tcp_get_class ();
+    HEV_OBJECT (self)->klass = HEV_SOCKS5_CLIENT_TCP_TYPE;
 
     self->addr = hev_malloc (19);
     if (!self->addr)
@@ -134,7 +134,7 @@ hev_socks5_client_tcp_construct_ip (HevSocks5ClientTCP *self,
 }
 
 static void
-hev_socks5_client_tcp_destruct (HevSocks5 *base)
+hev_socks5_client_tcp_destruct (HevObject *base)
 {
     HevSocks5ClientTCP *self = HEV_SOCKS5_CLIENT_TCP (base);
 
@@ -143,30 +143,27 @@ hev_socks5_client_tcp_destruct (HevSocks5 *base)
     if (self->addr)
         hev_free (self->addr);
 
-    hev_socks5_client_get_class ()->finalizer (base);
+    HEV_SOCKS5_CLIENT_TYPE->finalizer (base);
 }
 
-HevSocks5Class *
-hev_socks5_client_tcp_get_class (void)
+HevObjectClass *
+hev_socks5_client_tcp_class (void)
 {
     static HevSocks5ClientTCPClass klass;
     HevSocks5ClientTCPClass *kptr = &klass;
+    HevObjectClass *okptr = HEV_OBJECT_CLASS (kptr);
 
-    if (!HEV_SOCKS5_CLASS (kptr)->name) {
+    if (!okptr->name) {
         HevSocks5ClientClass *ckptr;
-        HevSocks5Class *skptr;
-        void *ptr;
 
-        ptr = hev_socks5_client_get_class ();
-        memcpy (kptr, ptr, sizeof (HevSocks5ClientClass));
+        memcpy (kptr, HEV_SOCKS5_CLIENT_TYPE, sizeof (HevSocks5ClientClass));
 
-        skptr = HEV_SOCKS5_CLASS (kptr);
-        skptr->name = "HevSocks5ClientTCP";
-        skptr->finalizer = hev_socks5_client_tcp_destruct;
+        okptr->name = "HevSocks5ClientTCP";
+        okptr->finalizer = hev_socks5_client_tcp_destruct;
 
         ckptr = HEV_SOCKS5_CLIENT_CLASS (kptr);
         ckptr->get_upstream_addr = hev_socks5_client_tcp_get_upstream_addr;
     }
 
-    return HEV_SOCKS5_CLASS (kptr);
+    return okptr;
 }
