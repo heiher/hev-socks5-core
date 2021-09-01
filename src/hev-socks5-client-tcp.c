@@ -16,58 +16,6 @@
 
 #include "hev-socks5-client-tcp.h"
 
-static HevSocks5Addr *
-hev_socks5_client_tcp_get_upstream_addr (HevSocks5Client *base)
-{
-    HevSocks5ClientTCP *self = HEV_SOCKS5_CLIENT_TCP (base);
-    HevSocks5Addr *addr;
-
-    addr = self->addr;
-    self->addr = NULL;
-
-    return addr;
-}
-
-static HevSocks5ClientTCPClass _klass = {
-    {
-        {
-            .name = "HevSocks5ClientTCP",
-            .finalizer = hev_socks5_client_tcp_destruct,
-        },
-
-        .get_upstream_addr = hev_socks5_client_tcp_get_upstream_addr,
-    },
-};
-
-int
-hev_socks5_client_tcp_construct (HevSocks5ClientTCP *self)
-{
-    int res;
-
-    res = hev_socks5_client_construct (&self->base, HEV_SOCKS5_CLIENT_TYPE_TCP);
-    if (res < 0)
-        return res;
-
-    LOG_D ("%p socks5 client tcp construct", self);
-
-    HEV_SOCKS5 (self)->klass = HEV_SOCKS5_CLASS (&_klass);
-
-    return 0;
-}
-
-void
-hev_socks5_client_tcp_destruct (HevSocks5 *base)
-{
-    HevSocks5ClientTCP *self = HEV_SOCKS5_CLIENT_TCP (base);
-
-    LOG_D ("%p socks5 client tcp destruct", self);
-
-    if (self->addr)
-        hev_free (self->addr);
-
-    hev_socks5_client_destruct (base);
-}
-
 static HevSocks5ClientTCP *
 hev_socks5_client_tcp_new_internal (void)
 {
@@ -155,4 +103,70 @@ hev_socks5_client_tcp_new_ip (struct sockaddr *addr)
     self->addr = s5addr;
 
     return self;
+}
+
+static HevSocks5Addr *
+hev_socks5_client_tcp_get_upstream_addr (HevSocks5Client *base)
+{
+    HevSocks5ClientTCP *self = HEV_SOCKS5_CLIENT_TCP (base);
+    HevSocks5Addr *addr;
+
+    addr = self->addr;
+    self->addr = NULL;
+
+    return addr;
+}
+
+int
+hev_socks5_client_tcp_construct (HevSocks5ClientTCP *self)
+{
+    int res;
+
+    res = hev_socks5_client_construct (&self->base, HEV_SOCKS5_CLIENT_TYPE_TCP);
+    if (res < 0)
+        return res;
+
+    LOG_D ("%p socks5 client tcp construct", self);
+
+    HEV_SOCKS5 (self)->klass = hev_socks5_client_tcp_get_class ();
+
+    return 0;
+}
+
+static void
+hev_socks5_client_tcp_destruct (HevSocks5 *base)
+{
+    HevSocks5ClientTCP *self = HEV_SOCKS5_CLIENT_TCP (base);
+
+    LOG_D ("%p socks5 client tcp destruct", self);
+
+    if (self->addr)
+        hev_free (self->addr);
+
+    hev_socks5_client_get_class ()->finalizer (base);
+}
+
+HevSocks5Class *
+hev_socks5_client_tcp_get_class (void)
+{
+    static HevSocks5ClientTCPClass klass;
+    HevSocks5ClientTCPClass *kptr = &klass;
+
+    if (!HEV_SOCKS5_CLASS (kptr)->name) {
+        HevSocks5ClientClass *ckptr;
+        HevSocks5Class *skptr;
+        void *ptr;
+
+        ptr = hev_socks5_client_get_class ();
+        memcpy (kptr, ptr, sizeof (HevSocks5ClientClass));
+
+        skptr = HEV_SOCKS5_CLASS (kptr);
+        skptr->name = "HevSocks5ClientTCP";
+        skptr->finalizer = hev_socks5_client_tcp_destruct;
+
+        ckptr = HEV_SOCKS5_CLIENT_CLASS (kptr);
+        ckptr->get_upstream_addr = hev_socks5_client_tcp_get_upstream_addr;
+    }
+
+    return HEV_SOCKS5_CLASS (kptr);
 }

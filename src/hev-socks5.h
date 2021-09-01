@@ -43,8 +43,9 @@ struct _HevSocks5Class
     void (*finalizer) (HevSocks5 *self);
 };
 
+HevSocks5Class *hev_socks5_get_class (void);
+
 int hev_socks5_construct (HevSocks5 *self);
-void hev_socks5_destruct (HevSocks5 *self);
 
 HevSocks5 *hev_socks5_ref (HevSocks5 *self);
 void hev_socks5_unref (HevSocks5 *self);

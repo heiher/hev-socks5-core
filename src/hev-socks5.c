@@ -22,35 +22,6 @@
 
 #include "hev-socks5.h"
 
-static HevSocks5Class _klass = {
-    .name = "HevSocks5",
-    .finalizer = hev_socks5_destruct,
-};
-
-int
-hev_socks5_construct (HevSocks5 *self)
-{
-    LOG_D ("%p socks5 construct", self);
-
-    HEV_SOCKS5 (self)->klass = HEV_SOCKS5_CLASS (&_klass);
-
-    self->fd = -1;
-    self->timeout = -1;
-    self->ref_count = 1;
-
-    return 0;
-}
-
-void
-hev_socks5_destruct (HevSocks5 *self)
-{
-    LOG_D ("%p socks5 destruct", self);
-
-    if (self->fd >= 0)
-        close (self->fd);
-    hev_free (self);
-}
-
 HevSocks5 *
 hev_socks5_ref (HevSocks5 *self)
 {
@@ -95,4 +66,42 @@ hev_socks5_set_auth_user_pass (HevSocks5 *self, const char *user,
 {
     self->auth.user = user;
     self->auth.pass = pass;
+}
+
+int
+hev_socks5_construct (HevSocks5 *self)
+{
+    LOG_D ("%p socks5 construct", self);
+
+    HEV_SOCKS5 (self)->klass = hev_socks5_get_class ();
+
+    self->fd = -1;
+    self->timeout = -1;
+    self->ref_count = 1;
+
+    return 0;
+}
+
+static void
+hev_socks5_destruct (HevSocks5 *self)
+{
+    LOG_D ("%p socks5 destruct", self);
+
+    if (self->fd >= 0)
+        close (self->fd);
+    hev_free (self);
+}
+
+HevSocks5Class *
+hev_socks5_get_class (void)
+{
+    static HevSocks5Class klass;
+    HevSocks5Class *kptr = &klass;
+
+    if (!kptr->name) {
+        kptr->name = "HevSocks5";
+        kptr->finalizer = hev_socks5_destruct;
+    }
+
+    return kptr;
 }

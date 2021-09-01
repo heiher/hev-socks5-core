@@ -44,9 +44,10 @@ struct _HevSocks5ClientClass
     HevSocks5Addr *(*get_upstream_addr) (HevSocks5Client *self);
 };
 
+HevSocks5Class *hev_socks5_client_get_class (void);
+
 int hev_socks5_client_construct (HevSocks5Client *self,
                                  HevSocks5ClientType type);
-void hev_socks5_client_destruct (HevSocks5 *base);
 
 int hev_socks5_client_connect (HevSocks5Client *self, const char *addr,
                                int port);

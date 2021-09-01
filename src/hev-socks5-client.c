@@ -22,41 +22,6 @@
 
 #define task_io_yielder hev_socks5_task_io_yielder
 
-static HevSocks5ClientClass _klass = {
-    {
-        .name = "HevSocks5Client",
-        .finalizer = hev_socks5_client_destruct,
-    },
-};
-
-int
-hev_socks5_client_construct (HevSocks5Client *self, HevSocks5ClientType type)
-{
-    int res;
-
-    res = hev_socks5_construct (&self->base);
-    if (res < 0)
-        return res;
-
-    LOG_D ("%p socks5 client construct", self);
-
-    HEV_SOCKS5 (self)->klass = HEV_SOCKS5_CLASS (&_klass);
-
-    self->type = type;
-
-    return 0;
-}
-
-void
-hev_socks5_client_destruct (HevSocks5 *base)
-{
-    HevSocks5Client *self = HEV_SOCKS5_CLIENT (base);
-
-    LOG_D ("%p socks5 client destruct", self);
-
-    hev_socks5_destruct (HEV_SOCKS5 (self));
-}
-
 static int
 hev_socks5_client_connect_server (HevSocks5Client *self, const char *addr,
                                   int port)
@@ -316,4 +281,53 @@ hev_socks5_client_handshake (HevSocks5Client *self)
         return -1;
 
     return 0;
+}
+
+int
+hev_socks5_client_construct (HevSocks5Client *self, HevSocks5ClientType type)
+{
+    int res;
+
+    res = hev_socks5_construct (&self->base);
+    if (res < 0)
+        return res;
+
+    LOG_D ("%p socks5 client construct", self);
+
+    HEV_SOCKS5 (self)->klass = hev_socks5_client_get_class ();
+
+    self->type = type;
+
+    return 0;
+}
+
+static void
+hev_socks5_client_destruct (HevSocks5 *base)
+{
+    HevSocks5Client *self = HEV_SOCKS5_CLIENT (base);
+
+    LOG_D ("%p socks5 client destruct", self);
+
+    hev_socks5_get_class ()->finalizer (base);
+}
+
+HevSocks5Class *
+hev_socks5_client_get_class (void)
+{
+    static HevSocks5ClientClass klass;
+    HevSocks5ClientClass *kptr = &klass;
+
+    if (!HEV_SOCKS5_CLASS (kptr)->name) {
+        HevSocks5Class *skptr;
+        void *ptr;
+
+        ptr = hev_socks5_get_class ();
+        memcpy (kptr, ptr, sizeof (HevSocks5Class));
+
+        skptr = HEV_SOCKS5_CLASS (kptr);
+        skptr->name = "HevSocks5Client";
+        skptr->finalizer = hev_socks5_client_destruct;
+    }
+
+    return HEV_SOCKS5_CLASS (kptr);
 }

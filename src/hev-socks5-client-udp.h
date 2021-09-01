@@ -32,8 +32,9 @@ struct _HevSocks5ClientUDPClass
     HevSocks5ClientClass base;
 };
 
+HevSocks5Class *hev_socks5_client_udp_get_class (void);
+
 int hev_socks5_client_udp_construct (HevSocks5ClientUDP *self);
-void hev_socks5_client_udp_destruct (HevSocks5 *base);
 
 HevSocks5ClientUDP *hev_socks5_client_udp_new (void);
 

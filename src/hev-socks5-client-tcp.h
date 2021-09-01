@@ -36,8 +36,9 @@ struct _HevSocks5ClientTCPClass
     HevSocks5ClientClass base;
 };
 
+HevSocks5Class *hev_socks5_client_tcp_get_class (void);
+
 int hev_socks5_client_tcp_construct (HevSocks5ClientTCP *self);
-void hev_socks5_client_tcp_destruct (HevSocks5 *base);
 
 HevSocks5ClientTCP *hev_socks5_client_tcp_new (const char *addr, int port);
 HevSocks5ClientTCP *hev_socks5_client_tcp_new_ip (struct sockaddr *addr);
