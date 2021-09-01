@@ -410,6 +410,7 @@ hev_socks5_server_write_response (HevSocks5Server *self, int rep,
 static int
 hev_socks5_server_connect (HevSocks5Server *self, struct sockaddr_in6 *addr)
 {
+    HevSocks5Class *klass;
     int timeout;
     int res;
     int fd;
@@ -419,6 +420,14 @@ hev_socks5_server_connect (HevSocks5Server *self, struct sockaddr_in6 *addr)
     fd = hev_socks5_socket (SOCK_STREAM);
     if (fd < 0) {
         LOG_E ("%p socks5 server socket stream", self);
+        return -1;
+    }
+
+    klass = HEV_SOCKS5_GET_CLASS (self);
+    res = klass->binder (HEV_SOCKS5 (self), fd);
+    if (res < 0) {
+        LOG_E ("%p socks5 server bind", self);
+        close (fd);
         return -1;
     }
 
@@ -442,6 +451,8 @@ hev_socks5_server_connect (HevSocks5Server *self, struct sockaddr_in6 *addr)
 static int
 hev_socks5_server_bind (HevSocks5Server *self)
 {
+    HevSocks5Class *klass;
+    int res;
     int fd;
 
     LOG_D ("%p socks5 server bind", self);
@@ -449,6 +460,14 @@ hev_socks5_server_bind (HevSocks5Server *self)
     fd = hev_socks5_socket (SOCK_DGRAM);
     if (fd < 0) {
         LOG_E ("%p socks5 server socket dgram", self);
+        return -1;
+    }
+
+    klass = HEV_SOCKS5_GET_CLASS (self);
+    res = klass->binder (HEV_SOCKS5 (self), fd);
+    if (res < 0) {
+        LOG_E ("%p socks5 server bind", self);
+        close (fd);
         return -1;
     }
 
