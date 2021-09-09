@@ -165,8 +165,9 @@ main (int argc, char *argv[])
 * **HevSocks5TProxy** - https://github.com/heiher/hev-socks5-tproxy
 * **HevSocks5Tunnel** - https://github.com/heiher/hev-socks5-tunnel
 
-## Authors
-* **Heiher** - https://hev.cc
+## Contributors
+* **hev** - https://hev.cc
+* **spider84** - https://github.com/spider84
 
 ## License
 LGPL
