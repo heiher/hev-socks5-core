@@ -49,7 +49,7 @@ hev_socks5_logger_fini (void)
 int
 hev_socks5_logger_enabled (HevSocks5LoggerLevel level)
 {
-    if (fd >= 0 || level >= req_level)
+    if (fd >= 0 && level >= req_level)
         return 1;
 
     return 0;
