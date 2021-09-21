@@ -15,8 +15,18 @@ extern "C" {
 #endif
 
 #define HEV_SOCKS5_TCP(p) ((HevSocks5TCP *)p)
+#define HEV_SOCKS5_TCP_IFACE(p) ((HevSocks5TCPIface *)p)
+#define HEV_SOCKS5_TCP_TYPE (hev_socks5_tcp_iface ())
 
-typedef struct _HevSocks5TCP HevSocks5TCP;
+typedef void HevSocks5TCP;
+typedef struct _HevSocks5TCPIface HevSocks5TCPIface;
+
+struct _HevSocks5TCPIface
+{
+    int (*splicer) (HevSocks5TCP *self, int fd);
+};
+
+void *hev_socks5_tcp_iface (void);
 
 int hev_socks5_tcp_splice (HevSocks5TCP *self, int fd);
 

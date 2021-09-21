@@ -11,6 +11,7 @@
 #define __HEV_SOCKS5_SERVER_H__
 
 #include "hev-socks5.h"
+#include "hev-socks5-tcp.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,6 +43,8 @@ struct _HevSocks5Server
 struct _HevSocks5ServerClass
 {
     HevSocks5Class base;
+
+    HevSocks5TCPIface tcp;
 };
 
 HevObjectClass *hev_socks5_server_class (void);
