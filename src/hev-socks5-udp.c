@@ -212,14 +212,14 @@ hev_socks5_udp_fwd_b (HevSocks5UDP *self, int fd)
     return 1;
 }
 
-int
-hev_socks5_udp_splice (HevSocks5UDP *self, int fd)
+static int
+hev_socks5_udp_splicer (HevSocks5UDP *self, int fd)
 {
     HevTask *task = hev_task_self ();
     int res_f = 1;
     int res_b = 1;
 
-    LOG_D ("%p socks5 udp splice", self);
+    LOG_D ("%p socks5 udp splicer", self);
 
     if (hev_task_add_fd (task, fd, POLLIN | POLLOUT) < 0)
         hev_task_mod_fd (task, fd, POLLIN | POLLOUT);
@@ -244,4 +244,23 @@ hev_socks5_udp_splice (HevSocks5UDP *self, int fd)
     }
 
     return 0;
+}
+
+int
+hev_socks5_udp_splice (HevSocks5UDP *self, int fd)
+{
+    HevSocks5UDPIface *iface;
+
+    iface = HEV_OBJECT_GET_IFACE (self, HEV_SOCKS5_UDP_TYPE);
+    return iface->splicer (self, fd);
+}
+
+void *
+hev_socks5_udp_iface (void)
+{
+    static HevSocks5UDPIface type = {
+        .splicer = hev_socks5_udp_splicer,
+    };
+
+    return &type;
 }

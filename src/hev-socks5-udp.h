@@ -17,8 +17,18 @@ extern "C" {
 #endif
 
 #define HEV_SOCKS5_UDP(p) ((HevSocks5UDP *)p)
+#define HEV_SOCKS5_UDP_IFACE(p) ((HevSocks5UDPIface *)p)
+#define HEV_SOCKS5_UDP_TYPE (hev_socks5_udp_iface ())
 
-typedef struct _HevSocks5UDP HevSocks5UDP;
+typedef void HevSocks5UDP;
+typedef struct _HevSocks5UDPIface HevSocks5UDPIface;
+
+struct _HevSocks5UDPIface
+{
+    int (*splicer) (HevSocks5UDP *self, int fd);
+};
+
+void *hev_socks5_udp_iface (void);
 
 int hev_socks5_udp_sendto (HevSocks5UDP *self, const void *buf, size_t len,
                            struct sockaddr *addr);

@@ -15,7 +15,6 @@
 #include <hev-task-io-socket.h>
 #include <hev-memory-allocator.h>
 
-#include "hev-socks5-udp.h"
 #include "hev-socks5-proto.h"
 #include "hev-socks5-misc-priv.h"
 #include "hev-socks5-logger-priv.h"
@@ -603,6 +602,9 @@ hev_socks5_server_iface (HevObject *base, void *type)
     if (type == HEV_SOCKS5_TCP_TYPE)
         return &klass->tcp;
 
+    if (type == HEV_SOCKS5_UDP_TYPE)
+        return &klass->udp;
+
     return NULL;
 }
 
@@ -615,6 +617,7 @@ hev_socks5_server_class (void)
 
     if (!okptr->name) {
         HevSocks5TCPIface *tiptr;
+        HevSocks5UDPIface *uiptr;
 
         memcpy (kptr, HEV_SOCKS5_TYPE, sizeof (HevSocks5Class));
 
@@ -624,6 +627,9 @@ hev_socks5_server_class (void)
 
         tiptr = &kptr->tcp;
         memcpy (tiptr, HEV_SOCKS5_TCP_TYPE, sizeof (HevSocks5TCPIface));
+
+        uiptr = &kptr->udp;
+        memcpy (uiptr, HEV_SOCKS5_UDP_TYPE, sizeof (HevSocks5UDPIface));
     }
 
     return okptr;
