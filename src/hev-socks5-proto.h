@@ -26,7 +26,7 @@ typedef enum _HevSocks5AddrType HevSocks5AddrType;
 typedef struct _HevSocks5Auth HevSocks5Auth;
 typedef struct _HevSocks5Addr HevSocks5Addr;
 typedef struct _HevSocks5ReqRes HevSocks5ReqRes;
-typedef struct _HevSocks5UDP HevSocks5UDP;
+typedef struct _HevSocks5UDPHdr HevSocks5UDPHdr;
 
 enum _HevSocks5Version
 {
@@ -113,7 +113,7 @@ struct _HevSocks5ReqRes
     HevSocks5Addr addr;
 } __attribute__ ((packed));
 
-struct _HevSocks5UDP
+struct _HevSocks5UDPHdr
 {
     uint8_t rsv[3];
     HevSocks5Addr addr;

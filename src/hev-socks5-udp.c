@@ -26,9 +26,9 @@ int
 hev_socks5_udp_sendto (HevSocks5UDP *self, const void *buf, size_t len,
                        struct sockaddr *addr)
 {
+    HevSocks5UDPHdr udp;
     struct iovec iov[3];
     struct msghdr mh;
-    HevSocks5UDP udp;
     uint16_t datalen;
     int addrlen;
     int res;
@@ -72,7 +72,7 @@ int
 hev_socks5_udp_recvfrom (HevSocks5UDP *self, void *buf, size_t len,
                          struct sockaddr *addr)
 {
-    HevSocks5UDP udp;
+    HevSocks5UDPHdr udp;
     uint16_t datalen;
     int addrlen;
     int res;
