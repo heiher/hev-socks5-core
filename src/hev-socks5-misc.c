@@ -126,7 +126,7 @@ hev_socks5_resolve_to_sockaddr6 (const char *addr, int port,
 
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_V4MAPPED | AI_ADDRCONFIG;
+    hints.ai_flags = AI_ADDRCONFIG;
 
     res = hev_task_dns_getaddrinfo (addr, NULL, &hints, &result);
     if (res < 0)
