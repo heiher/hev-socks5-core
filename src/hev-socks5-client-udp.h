@@ -10,6 +10,8 @@
 #ifndef __HEV_SOCKS5_CLIENT_UDP_H__
 #define __HEV_SOCKS5_CLIENT_UDP_H__
 
+#include "hev-socks5-udp.h"
+
 #include "hev-socks5-client.h"
 
 #ifdef __cplusplus
@@ -31,6 +33,8 @@ struct _HevSocks5ClientUDP
 struct _HevSocks5ClientUDPClass
 {
     HevSocks5ClientClass base;
+
+    HevSocks5UDPIface udp;
 };
 
 HevObjectClass *hev_socks5_client_udp_class (void);
