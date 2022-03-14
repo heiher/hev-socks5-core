@@ -150,6 +150,14 @@ hev_socks5_client_tcp_destruct (HevObject *base)
     HEV_SOCKS5_CLIENT_TYPE->finalizer (base);
 }
 
+static void *
+hev_socks5_client_tcp_iface (HevObject *base, void *type)
+{
+    HevSocks5ClientTCPClass *klass = HEV_OBJECT_GET_CLASS (base);
+
+    return &klass->tcp;
+}
+
 HevObjectClass *
 hev_socks5_client_tcp_class (void)
 {
@@ -159,14 +167,19 @@ hev_socks5_client_tcp_class (void)
 
     if (!okptr->name) {
         HevSocks5ClientClass *ckptr;
+        HevSocks5TCPIface *tiptr;
 
         memcpy (kptr, HEV_SOCKS5_CLIENT_TYPE, sizeof (HevSocks5ClientClass));
 
         okptr->name = "HevSocks5ClientTCP";
         okptr->finalizer = hev_socks5_client_tcp_destruct;
+        okptr->iface = hev_socks5_client_tcp_iface;
 
         ckptr = HEV_SOCKS5_CLIENT_CLASS (kptr);
         ckptr->get_upstream_addr = hev_socks5_client_tcp_get_upstream_addr;
+
+        tiptr = &kptr->tcp;
+        memcpy (tiptr, HEV_SOCKS5_TCP_TYPE, sizeof (HevSocks5TCPIface));
     }
 
     return okptr;

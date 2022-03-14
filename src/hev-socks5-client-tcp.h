@@ -12,6 +12,8 @@
 
 #include <netinet/in.h>
 
+#include "hev-socks5-tcp.h"
+
 #include "hev-socks5-client.h"
 
 #ifdef __cplusplus
@@ -35,6 +37,8 @@ struct _HevSocks5ClientTCP
 struct _HevSocks5ClientTCPClass
 {
     HevSocks5ClientClass base;
+
+    HevSocks5TCPIface tcp;
 };
 
 HevObjectClass *hev_socks5_client_tcp_class (void);
