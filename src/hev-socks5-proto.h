@@ -115,7 +115,15 @@ struct _HevSocks5ReqRes
 
 struct _HevSocks5UDPHdr
 {
-    uint8_t rsv[3];
+    union
+    {
+        uint8_t rsv[3];
+        struct
+        {
+            uint16_t datlen;
+            uint8_t hdrlen;
+        } __attribute__ ((packed));
+    };
     HevSocks5Addr addr;
 } __attribute__ ((packed));
 
