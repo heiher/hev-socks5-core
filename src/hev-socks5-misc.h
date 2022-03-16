@@ -16,6 +16,8 @@ extern "C" {
 
 int hev_socks5_task_io_yielder (HevTaskYieldType type, void *data);
 
+void hev_socks5_set_task_stack_size (int stack_size);
+
 #ifdef __cplusplus
 }
 #endif

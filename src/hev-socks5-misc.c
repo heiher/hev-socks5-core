@@ -24,6 +24,8 @@
 #include "hev-socks5-misc.h"
 #include "hev-socks5-misc-priv.h"
 
+static int task_stack_size = 8192;
+
 int
 hev_socks5_task_io_yielder (HevTaskYieldType type, void *data)
 {
@@ -273,4 +275,16 @@ hev_socks5_addr_to_string (HevSocks5Addr *addr, char *buf, int len)
     snprintf (buf, len, "[%s]:%u", sa, port);
 
     return res;
+}
+
+void
+hev_socks5_set_task_stack_size (int stack_size)
+{
+    task_stack_size = stack_size;
+}
+
+int
+hev_socks5_get_task_stack_size (void)
+{
+    return task_stack_size;
 }

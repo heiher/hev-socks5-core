@@ -31,6 +31,8 @@ int hev_socks5_addr_to_sockaddr (HevSocks5Addr *addr, struct sockaddr *saddr);
 int hev_socks5_addr_from_sockaddr (HevSocks5Addr *addr, struct sockaddr *saddr);
 const char *hev_socks5_addr_to_string (HevSocks5Addr *addr, char *buf, int len);
 
+int hev_socks5_get_task_stack_size (void);
+
 #ifdef __cplusplus
 }
 #endif
