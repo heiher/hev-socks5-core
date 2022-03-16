@@ -25,6 +25,7 @@
 #include "hev-socks5-misc-priv.h"
 
 static int task_stack_size = 8192;
+static int udp_recv_buffer_size = 512 * 1024;
 
 int
 hev_socks5_task_io_yielder (HevTaskYieldType type, void *data)
@@ -63,6 +64,11 @@ hev_socks5_socket (int type)
     res = hev_task_add_fd (task, fd, POLLIN | POLLOUT);
     if (res < 0)
         hev_task_mod_fd (task, fd, POLLIN | POLLOUT);
+
+    if (type == SOCK_DGRAM) {
+        res = udp_recv_buffer_size;
+        setsockopt (fd, SOL_SOCKET, SO_RCVBUF, &res, sizeof (res));
+    }
 
     return fd;
 }
@@ -287,4 +293,10 @@ int
 hev_socks5_get_task_stack_size (void)
 {
     return task_stack_size;
+}
+
+void
+hev_socks5_set_udp_recv_buffer_size (int buffer_size)
+{
+    udp_recv_buffer_size = buffer_size;
 }
