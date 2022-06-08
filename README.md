@@ -170,4 +170,4 @@ main (int argc, char *argv[])
 * **spider84** - https://github.com/spider84
 
 ## License
-LGPL
+MIT
