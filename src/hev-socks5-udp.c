@@ -2,7 +2,7 @@
  ============================================================================
  Name        : hev-socks5-udp.c
  Author      : Heiher <r@hev.cc>
- Copyright   : Copyright (c) 2021 hev
+ Copyright   : Copyright (c) 2021 - 2023 hev
  Description : Socks5 UDP
  ============================================================================
  */
@@ -37,7 +37,7 @@ hev_socks5_udp_sendto (HevSocks5UDP *self, const void *buf, size_t len,
                        struct sockaddr *addr)
 {
     HevSocks5UDPHdr udp;
-    struct iovec iov[3];
+    struct iovec iov[2];
     struct msghdr mh;
     int addrlen;
     int res;
@@ -51,82 +51,21 @@ hev_socks5_udp_sendto (HevSocks5UDP *self, const void *buf, size_t len,
     }
 
     udp.datlen = htons (len);
-    udp.hdrlen = 5 + addrlen;
+    udp.hdrlen = 3 + addrlen;
 
     memset (&mh, 0, sizeof (mh));
     mh.msg_iov = iov;
-    mh.msg_iovlen = 3;
+    mh.msg_iovlen = 2;
 
     iov[0].iov_base = &udp;
-    iov[0].iov_len = udp.hdrlen - 2;
-    iov[1].iov_base = &udp.datlen;
-    iov[1].iov_len = sizeof (udp.datlen);
-    iov[2].iov_base = (void *)buf;
-    iov[2].iov_len = len;
+    iov[0].iov_len = udp.hdrlen;
+    iov[1].iov_base = (void *)buf;
+    iov[1].iov_len = len;
 
     res = hev_task_io_socket_sendmsg (HEV_SOCKS5 (self)->fd, &mh, MSG_WAITALL,
                                       task_io_yielder, self);
     if (res <= 0) {
         LOG_E ("%p socks5 udp write udp", self);
-        return -1;
-    }
-
-    return res;
-}
-
-static int
-hev_socks5_udp_recvfrom_fallback (HevSocks5UDP *self, HevSocks5UDPHdr *udp,
-                                  void *buf, size_t len, struct sockaddr *addr)
-{
-    uint16_t datalen;
-    int addrlen;
-    int res;
-
-    LOG_D ("%p socks5 udp recvfrom fallback", self);
-
-    switch (udp->addr.atype) {
-    case HEV_SOCKS5_ADDR_TYPE_IPV4:
-        addrlen = 6;
-        break;
-    case HEV_SOCKS5_ADDR_TYPE_IPV6:
-        addrlen = 18;
-        break;
-    default:
-        LOG_E ("%p socks5 udp addr.atype %u", self, udp->addr.atype);
-        return -1;
-    }
-
-    res = hev_task_io_socket_recv (HEV_SOCKS5 (self)->fd, &udp->addr.ipv4,
-                                   addrlen, MSG_WAITALL, task_io_yielder, self);
-    if (res <= 0) {
-        LOG_E ("%p socks5 udp read addr", self);
-        return -1;
-    }
-
-    res = hev_socks5_addr_to_sockaddr (&udp->addr, addr);
-    if (res < 0) {
-        LOG_E ("%p socks5 udp to sockaddr", self);
-        return -1;
-    }
-
-    res = hev_task_io_socket_recv (HEV_SOCKS5 (self)->fd, &datalen,
-                                   sizeof (datalen), MSG_WAITALL,
-                                   task_io_yielder, self);
-    if (res <= 0) {
-        LOG_E ("%p socks5 udp read data len", self);
-        return -1;
-    }
-
-    datalen = ntohs (datalen);
-    if (datalen > len) {
-        LOG_E ("%p socks5 udp data len", self);
-        return -1;
-    }
-
-    res = hev_task_io_socket_recv (HEV_SOCKS5 (self)->fd, buf, datalen,
-                                   MSG_WAITALL, task_io_yielder, self);
-    if (res <= 0) {
-        LOG_E ("%p socks5 udp read data", self);
         return -1;
     }
 
@@ -150,9 +89,6 @@ hev_socks5_udp_recvfrom (HevSocks5UDP *self, void *buf, size_t len,
         LOG_E ("%p socks5 udp read udp head", self);
         return -1;
     }
-
-    if (udp.hdrlen == 0)
-        return hev_socks5_udp_recvfrom_fallback (self, &udp, buf, len, addr);
 
     udp.datlen = ntohs (udp.datlen);
     if (udp.datlen > len) {
