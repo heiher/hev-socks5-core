@@ -2,7 +2,7 @@
  ============================================================================
  Name        : hev-socks5-server.c
  Author      : Heiher <r@hev.cc>
- Copyright   : Copyright (c) 2021 hev
+ Copyright   : Copyright (c) 2021 - 2023 hev
  Description : Socks5 Server
  ============================================================================
  */
@@ -497,13 +497,13 @@ hev_socks5_server_handshake (HevSocks5Server *self)
             res = hev_socks5_server_connect (self, &addr);
             if (res < 0)
                 rep = HEV_SOCKS5_RES_REP_HOST;
-            self->type = HEV_SOCKS5_SERVER_TYPE_TCP;
+            HEV_SOCKS5 (self)->type = HEV_SOCKS5_TYPE_TCP;
             break;
         case HEV_SOCKS5_REQ_CMD_FWD_UDP:
             res = hev_socks5_server_bind (self);
             if (res < 0)
                 rep = HEV_SOCKS5_RES_REP_FAIL;
-            self->type = HEV_SOCKS5_SERVER_TYPE_UDP;
+            HEV_SOCKS5 (self)->type = HEV_SOCKS5_TYPE_UDP_IN_TCP;
             break;
         default:
             rep = HEV_SOCKS5_RES_REP_IMPL;
@@ -523,13 +523,15 @@ hev_socks5_server_service (HevSocks5Server *self)
 {
     LOG_D ("%p socks5 server service", self);
 
-    switch (self->type) {
-    case HEV_SOCKS5_SERVER_TYPE_TCP:
+    switch (HEV_SOCKS5 (self)->type) {
+    case HEV_SOCKS5_TYPE_TCP:
         hev_socks5_tcp_splice (HEV_SOCKS5_TCP (self), self->fd);
         break;
-    case HEV_SOCKS5_SERVER_TYPE_UDP:
+    case HEV_SOCKS5_TYPE_UDP_IN_TCP:
         hev_socks5_udp_splice (HEV_SOCKS5_UDP (self), self->fd);
         break;
+    default:
+        return -1;
     }
 
     return 0;
@@ -560,12 +562,18 @@ hev_socks5_server_run (HevSocks5Server *self)
     return 0;
 }
 
+static int
+hev_socks5_server_get_fd (HevSocks5UDP *self)
+{
+    return HEV_SOCKS5 (self)->fd;
+}
+
 int
 hev_socks5_server_construct (HevSocks5Server *self, int fd)
 {
     int res;
 
-    res = hev_socks5_construct (&self->base);
+    res = hev_socks5_construct (&self->base, HEV_SOCKS5_TYPE_NONE);
     if (res < 0)
         return res;
 
@@ -630,6 +638,7 @@ hev_socks5_server_class (void)
 
         uiptr = &kptr->udp;
         memcpy (uiptr, HEV_SOCKS5_UDP_TYPE, sizeof (HevSocks5UDPIface));
+        uiptr->get_fd = hev_socks5_server_get_fd;
     }
 
     return okptr;

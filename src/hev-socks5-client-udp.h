@@ -2,7 +2,7 @@
  ============================================================================
  Name        : hev-socks5-client-udp.h
  Author      : Heiher <r@hev.cc>
- Copyright   : Copyright (c) 2021 hev
+ Copyright   : Copyright (c) 2021 - 2023 hev
  Description : Socks5 Client UDP
  ============================================================================
  */
@@ -28,6 +28,8 @@ typedef struct _HevSocks5ClientUDPClass HevSocks5ClientUDPClass;
 struct _HevSocks5ClientUDP
 {
     HevSocks5Client base;
+
+    int fd;
 };
 
 struct _HevSocks5ClientUDPClass
@@ -39,9 +41,10 @@ struct _HevSocks5ClientUDPClass
 
 HevObjectClass *hev_socks5_client_udp_class (void);
 
-int hev_socks5_client_udp_construct (HevSocks5ClientUDP *self);
+int hev_socks5_client_udp_construct (HevSocks5ClientUDP *self,
+                                     HevSocks5Type type);
 
-HevSocks5ClientUDP *hev_socks5_client_udp_new (void);
+HevSocks5ClientUDP *hev_socks5_client_udp_new (HevSocks5Type type);
 
 #ifdef __cplusplus
 }

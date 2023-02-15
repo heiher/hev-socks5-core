@@ -5,7 +5,8 @@ HevSocks5Core is a simple, lightweight socks5 library.
 **Features**
 * IPv4/IPv6. (dual stack)
 * Standard `CONNECT` command.
-* Extended `FWDUDP` command. (UDP over TCP)
+* Standard `UDP ASSOCIATE` command. (client only)
+* Extended `FWD UDP` command. (UDP in TCP)
 * Simple username/password authentication.
 
 **Dependencies**
@@ -118,7 +119,7 @@ udp_client_entry (void *data)
 {
     HevSocks5ClientUDP *udp;
 
-    udp = hev_socks5_client_udp_new ();
+    udp = hev_socks5_client_udp_new (HEV_SOCKS5_TYPE_UDP_IN_TCP);
     hev_socks5_client_connect (HEV_SOCKS5_CLIENT (udp), "127.0.0.1", 1080);
     hev_socks5_client_handshake (HEV_SOCKS5_CLIENT (udp));
 

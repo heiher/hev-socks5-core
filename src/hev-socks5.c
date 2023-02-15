@@ -2,7 +2,7 @@
  ============================================================================
  Name        : hev-socks5.c
  Author      : Heiher <r@hev.cc>
- Copyright   : Copyright (c) 2021 hev
+ Copyright   : Copyright (c) 2021 - 2023 hev
  Description : Socks5
  ============================================================================
  */
@@ -49,7 +49,7 @@ hev_socks5_bind (HevSocks5 *self, int sock)
 }
 
 int
-hev_socks5_construct (HevSocks5 *self)
+hev_socks5_construct (HevSocks5 *self, HevSocks5Type type)
 {
     int res;
 
@@ -63,6 +63,7 @@ hev_socks5_construct (HevSocks5 *self)
 
     self->fd = -1;
     self->timeout = -1;
+    self->type = type;
 
     return 0;
 }

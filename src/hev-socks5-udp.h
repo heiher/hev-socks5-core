@@ -2,7 +2,7 @@
  ============================================================================
  Name        : hev-socks5-udp.h
  Author      : Heiher <r@hev.cc>
- Copyright   : Copyright (c) 2021 hev
+ Copyright   : Copyright (c) 2021 - 2023 hev
  Description : Socks5 UDP
  ============================================================================
  */
@@ -25,10 +25,13 @@ typedef struct _HevSocks5UDPIface HevSocks5UDPIface;
 
 struct _HevSocks5UDPIface
 {
+    int (*get_fd) (HevSocks5UDP *self);
     int (*splicer) (HevSocks5UDP *self, int fd);
 };
 
 void *hev_socks5_udp_iface (void);
+
+int hev_socks5_udp_get_fd (HevSocks5UDP *self);
 
 int hev_socks5_udp_sendto (HevSocks5UDP *self, const void *buf, size_t len,
                            struct sockaddr *addr);

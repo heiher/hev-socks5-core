@@ -2,7 +2,7 @@
  ============================================================================
  Name        : hev-socks5-server.h
  Author      : Heiher <r@hev.cc>
- Copyright   : Copyright (c) 2021 hev
+ Copyright   : Copyright (c) 2021 - 2023 hev
  Description : Socks5 Server
  ============================================================================
  */
@@ -24,13 +24,6 @@ extern "C" {
 
 typedef struct _HevSocks5Server HevSocks5Server;
 typedef struct _HevSocks5ServerClass HevSocks5ServerClass;
-typedef enum _HevSocks5ServerType HevSocks5ServerType;
-
-enum _HevSocks5ServerType
-{
-    HEV_SOCKS5_SERVER_TYPE_TCP,
-    HEV_SOCKS5_SERVER_TYPE_UDP,
-};
 
 struct _HevSocks5Server
 {
@@ -38,7 +31,6 @@ struct _HevSocks5Server
 
     int fd;
     int timeout;
-    HevSocks5ServerType type;
 };
 
 struct _HevSocks5ServerClass

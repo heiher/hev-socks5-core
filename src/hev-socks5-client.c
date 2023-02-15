@@ -2,7 +2,7 @@
  ============================================================================
  Name        : hev-socks5-client.c
  Author      : Heiher <r@hev.cc>
- Copyright   : Copyright (c) 2021 hev
+ Copyright   : Copyright (c) 2021 - 2023 hev
  Description : Socks5 Client
  ============================================================================
  */
@@ -109,13 +109,18 @@ hev_socks5_client_write_request (HevSocks5Client *self)
     req.ver = HEV_SOCKS5_VERSION_5;
     req.rsv = 0;
 
-    switch (self->type) {
-    case HEV_SOCKS5_CLIENT_TYPE_TCP:
+    switch (HEV_SOCKS5 (self)->type) {
+    case HEV_SOCKS5_TYPE_TCP:
         req.cmd = HEV_SOCKS5_REQ_CMD_CONNECT;
         break;
-    case HEV_SOCKS5_CLIENT_TYPE_UDP:
+    case HEV_SOCKS5_TYPE_UDP_IN_TCP:
         req.cmd = HEV_SOCKS5_REQ_CMD_FWD_UDP;
         break;
+    case HEV_SOCKS5_TYPE_UDP_IN_UDP:
+        req.cmd = HEV_SOCKS5_REQ_CMD_UDP_ASC;
+        break;
+    default:
+        return -1;
     }
 
     iov[n].iov_base = &req;
@@ -159,6 +164,7 @@ hev_socks5_client_write_request (HevSocks5Client *self)
 static int
 hev_socks5_client_read_response (HevSocks5Client *self)
 {
+    HevSocks5ClientClass *klass;
     HevSocks5ReqRes res;
     HevSocks5Auth auth;
     int addrlen;
@@ -231,10 +237,17 @@ hev_socks5_client_read_response (HevSocks5Client *self)
         return -1;
     }
 
-    ret = hev_task_io_socket_recv (HEV_SOCKS5 (self)->fd, &res, addrlen,
-                                   MSG_WAITALL, task_io_yielder, self);
+    ret = hev_task_io_socket_recv (HEV_SOCKS5 (self)->fd, &res.addr.ipv4,
+                                   addrlen, MSG_WAITALL, task_io_yielder, self);
     if (ret <= 0) {
         LOG_E ("%p socks5 client read addr", self);
+        return -1;
+    }
+
+    klass = HEV_OBJECT_GET_CLASS (self);
+    ret = klass->set_upstream_addr (self, &res.addr);
+    if (ret < 0) {
+        LOG_E ("%p socks5 client set upstream addr", self);
         return -1;
     }
 
@@ -293,19 +306,17 @@ hev_socks5_client_handshake (HevSocks5Client *self)
 }
 
 int
-hev_socks5_client_construct (HevSocks5Client *self, HevSocks5ClientType type)
+hev_socks5_client_construct (HevSocks5Client *self, HevSocks5Type type)
 {
     int res;
 
-    res = hev_socks5_construct (&self->base);
+    res = hev_socks5_construct (&self->base, type);
     if (res < 0)
         return res;
 
     LOG_D ("%p socks5 client construct", self);
 
     HEV_OBJECT (self)->klass = HEV_SOCKS5_CLIENT_TYPE;
-
-    self->type = type;
 
     return 0;
 }

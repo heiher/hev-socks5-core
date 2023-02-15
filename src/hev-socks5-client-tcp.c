@@ -2,7 +2,7 @@
  ============================================================================
  Name        : hev-socks5-client-tcp.c
  Author      : Heiher <r@hev.cc>
- Copyright   : Copyright (c) 2021 hev
+ Copyright   : Copyright (c) 2021 - 2023 hev
  Description : Socks5 Client TCP
  ============================================================================
  */
@@ -70,6 +70,13 @@ hev_socks5_client_tcp_get_upstream_addr (HevSocks5Client *base)
     return addr;
 }
 
+static int
+hev_socks5_client_tcp_set_upstream_addr (HevSocks5Client *base,
+                                         HevSocks5Addr *addr)
+{
+    return 0;
+}
+
 int
 hev_socks5_client_tcp_construct (HevSocks5ClientTCP *self, const char *addr,
                                  int port)
@@ -78,7 +85,7 @@ hev_socks5_client_tcp_construct (HevSocks5ClientTCP *self, const char *addr,
     int nport;
     int res;
 
-    res = hev_socks5_client_construct (&self->base, HEV_SOCKS5_CLIENT_TYPE_TCP);
+    res = hev_socks5_client_construct (&self->base, HEV_SOCKS5_TYPE_TCP);
     if (res < 0)
         return res;
 
@@ -108,7 +115,7 @@ hev_socks5_client_tcp_construct_ip (HevSocks5ClientTCP *self,
 {
     int res;
 
-    res = hev_socks5_client_construct (&self->base, HEV_SOCKS5_CLIENT_TYPE_TCP);
+    res = hev_socks5_client_construct (&self->base, HEV_SOCKS5_TYPE_TCP);
     if (res < 0)
         return res;
 
@@ -177,6 +184,7 @@ hev_socks5_client_tcp_class (void)
 
         ckptr = HEV_SOCKS5_CLIENT_CLASS (kptr);
         ckptr->get_upstream_addr = hev_socks5_client_tcp_get_upstream_addr;
+        ckptr->set_upstream_addr = hev_socks5_client_tcp_set_upstream_addr;
 
         tiptr = &kptr->tcp;
         memcpy (tiptr, HEV_SOCKS5_TCP_TYPE, sizeof (HevSocks5TCPIface));

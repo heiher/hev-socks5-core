@@ -2,7 +2,7 @@
  ============================================================================
  Name        : hev-socks5-proto.h
  Author      : Heiher <r@hev.cc>
- Copyright   : Copyright (c) 2021 hev
+ Copyright   : Copyright (c) 2021 - 2023 hev
  Description : Socks5 Proto
  ============================================================================
  */
@@ -48,6 +48,7 @@ enum _HevSocks5AuthVersion
 enum _HevSocks5ReqCmd
 {
     HEV_SOCKS5_REQ_CMD_CONNECT = 1,
+    HEV_SOCKS5_REQ_CMD_UDP_ASC = 3,
     HEV_SOCKS5_REQ_CMD_FWD_UDP = 5,
 };
 

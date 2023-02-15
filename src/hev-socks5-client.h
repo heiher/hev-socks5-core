@@ -2,7 +2,7 @@
  ============================================================================
  Name        : hev-socks5-client.h
  Author      : Heiher <r@hev.cc>
- Copyright   : Copyright (c) 2021 hev
+ Copyright   : Copyright (c) 2021 - 2023 hev
  Description : Socks5 Client
  ============================================================================
  */
@@ -23,19 +23,10 @@ extern "C" {
 
 typedef struct _HevSocks5Client HevSocks5Client;
 typedef struct _HevSocks5ClientClass HevSocks5ClientClass;
-typedef enum _HevSocks5ClientType HevSocks5ClientType;
-
-enum _HevSocks5ClientType
-{
-    HEV_SOCKS5_CLIENT_TYPE_TCP,
-    HEV_SOCKS5_CLIENT_TYPE_UDP,
-};
 
 struct _HevSocks5Client
 {
     HevSocks5 base;
-
-    HevSocks5ClientType type;
 };
 
 struct _HevSocks5ClientClass
@@ -43,12 +34,12 @@ struct _HevSocks5ClientClass
     HevSocks5Class base;
 
     HevSocks5Addr *(*get_upstream_addr) (HevSocks5Client *self);
+    int (*set_upstream_addr) (HevSocks5Client *self, HevSocks5Addr *addr);
 };
 
 HevObjectClass *hev_socks5_client_class (void);
 
-int hev_socks5_client_construct (HevSocks5Client *self,
-                                 HevSocks5ClientType type);
+int hev_socks5_client_construct (HevSocks5Client *self, HevSocks5Type type);
 
 int hev_socks5_client_connect (HevSocks5Client *self, const char *addr,
                                int port);
