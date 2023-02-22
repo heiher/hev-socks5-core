@@ -193,12 +193,12 @@ hev_socks5_client_read_response (HevSocks5Client *self)
         }
 
         if (res.ver != HEV_SOCKS5_AUTH_VERSION_1) {
-            LOG_E ("%p socks5 client auth.res.ver %u", self, auth.ver);
+            LOG_E ("%p socks5 client auth.res.ver %u", self, res.ver);
             return -1;
         }
 
         if (res.rep != HEV_SOCKS5_RES_REP_SUCC) {
-            LOG_E ("%p socks5 client auth.res.rep %u", self, auth.ver);
+            LOG_E ("%p socks5 client auth.res.rep %u", self, res.rep);
             return -1;
         }
 
