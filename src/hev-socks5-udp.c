@@ -75,6 +75,8 @@ hev_socks5_udp_sendto (HevSocks5UDP *self, const void *buf, size_t len,
     memset (&mh, 0, sizeof (mh));
     mh.msg_iov = iov;
     mh.msg_iovlen = 2;
+    mh.msg_name = HEV_SOCKS5 (self)->data;
+    mh.msg_namelen = sizeof (struct sockaddr_in6);
 
     iov[0].iov_base = &udp;
     iov[0].iov_len = 3 + addrlen;
@@ -148,14 +150,19 @@ hev_socks5_udp_recvfrom_udp (HevSocks5UDP *self, void *buf, size_t len,
 {
     HevSocks5UDPHdr *udp;
     uint8_t rbuf[1500];
+    socklen_t alen;
     ssize_t rlen;
+    void *adat;
     int doff;
     int res;
 
     LOG_D ("%p socks5 udp recvfrom udp", self);
 
-    rlen = hev_task_io_socket_recv (hev_socks5_udp_get_fd (self), rbuf,
-                                    sizeof (rbuf), 0, task_io_yielder, self);
+    adat = HEV_SOCKS5 (self)->data;
+    alen = sizeof (struct sockaddr_in6);
+    rlen = hev_task_io_socket_recvfrom (hev_socks5_udp_get_fd (self), rbuf,
+                                        sizeof (rbuf), 0, adat, &alen,
+                                        task_io_yielder, self);
     if (rlen < 4) {
         LOG_E ("%p socks5 udp read", self);
         return -1;

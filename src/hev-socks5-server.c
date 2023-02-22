@@ -355,6 +355,7 @@ hev_socks5_server_read_request (HevSocks5Server *self, int *cmd, int *rep,
         case HEV_SOCKS5_REQ_CMD_CONNECT:
             type = "tcp";
             break;
+        case HEV_SOCKS5_REQ_CMD_UDP_ASC:
         case HEV_SOCKS5_REQ_CMD_FWD_UDP:
             type = "udp";
             break;
@@ -439,15 +440,16 @@ hev_socks5_server_connect (HevSocks5Server *self, struct sockaddr_in6 *addr)
         return -1;
     }
 
-    self->fd = fd;
+    self->fds[0] = fd;
 
     return 0;
 }
 
 static int
-hev_socks5_server_bind (HevSocks5Server *self)
+hev_socks5_server_bind (HevSocks5Server *self, struct sockaddr_in6 *addr)
 {
     HevSocks5Class *klass;
+    socklen_t alen;
     int res;
     int fd;
 
@@ -467,7 +469,49 @@ hev_socks5_server_bind (HevSocks5Server *self)
         return -1;
     }
 
-    self->fd = fd;
+    self->fds[0] = fd;
+
+    if (!addr)
+        return 0;
+
+    fd = HEV_SOCKS5 (self)->fd;
+    alen = sizeof (struct sockaddr_in6);
+    res = getsockname (fd, (struct sockaddr *)addr, &alen);
+    if (res < 0) {
+        LOG_E ("%p socks5 server socket name", self);
+        return -1;
+    }
+
+    fd = hev_socks5_socket (SOCK_DGRAM);
+    if (fd < 0) {
+        LOG_E ("%p socks5 server socket dgram", self);
+        return -1;
+    }
+
+    addr->sin6_port = 0;
+    res = bind (fd, (struct sockaddr *)addr, alen);
+    if (fd < 0) {
+        LOG_E ("%p socks5 server socket bind", self);
+        close (fd);
+        return -1;
+    }
+
+    res = getsockname (fd, (struct sockaddr *)addr, &alen);
+    if (res < 0) {
+        LOG_E ("%p socks5 server socket name", self);
+        close (fd);
+        return -1;
+    }
+
+    addr = hev_malloc (sizeof (struct sockaddr_in6));
+    if (!addr) {
+        LOG_E ("%p socks5 server socket addr", self);
+        close (fd);
+        return -1;
+    }
+
+    self->fds[1] = fd;
+    HEV_SOCKS5 (self)->data = addr;
 
     return 0;
 }
@@ -499,8 +543,14 @@ hev_socks5_server_handshake (HevSocks5Server *self)
                 rep = HEV_SOCKS5_RES_REP_HOST;
             HEV_SOCKS5 (self)->type = HEV_SOCKS5_TYPE_TCP;
             break;
+        case HEV_SOCKS5_REQ_CMD_UDP_ASC:
+            res = hev_socks5_server_bind (self, &addr);
+            if (res < 0)
+                rep = HEV_SOCKS5_RES_REP_FAIL;
+            HEV_SOCKS5 (self)->type = HEV_SOCKS5_TYPE_UDP_IN_UDP;
+            break;
         case HEV_SOCKS5_REQ_CMD_FWD_UDP:
-            res = hev_socks5_server_bind (self);
+            res = hev_socks5_server_bind (self, NULL);
             if (res < 0)
                 rep = HEV_SOCKS5_RES_REP_FAIL;
             HEV_SOCKS5 (self)->type = HEV_SOCKS5_TYPE_UDP_IN_TCP;
@@ -525,10 +575,13 @@ hev_socks5_server_service (HevSocks5Server *self)
 
     switch (HEV_SOCKS5 (self)->type) {
     case HEV_SOCKS5_TYPE_TCP:
-        hev_socks5_tcp_splice (HEV_SOCKS5_TCP (self), self->fd);
+        hev_socks5_tcp_splice (HEV_SOCKS5_TCP (self), self->fds[0]);
+        break;
+    case HEV_SOCKS5_TYPE_UDP_IN_UDP:
+        hev_socks5_udp_splice (HEV_SOCKS5_UDP (self), self->fds[0]);
         break;
     case HEV_SOCKS5_TYPE_UDP_IN_TCP:
-        hev_socks5_udp_splice (HEV_SOCKS5_UDP (self), self->fd);
+        hev_socks5_udp_splice (HEV_SOCKS5_UDP (self), self->fds[0]);
         break;
     default:
         return -1;
@@ -565,7 +618,20 @@ hev_socks5_server_run (HevSocks5Server *self)
 static int
 hev_socks5_server_get_fd (HevSocks5UDP *self)
 {
-    return HEV_SOCKS5 (self)->fd;
+    int fd;
+
+    switch (HEV_SOCKS5 (self)->type) {
+    case HEV_SOCKS5_TYPE_UDP_IN_TCP:
+        fd = HEV_SOCKS5 (self)->fd;
+        break;
+    case HEV_SOCKS5_TYPE_UDP_IN_UDP:
+        fd = HEV_SOCKS5_SERVER (self)->fds[1];
+        break;
+    default:
+        return -1;
+    }
+
+    return fd;
 }
 
 int
@@ -583,7 +649,8 @@ hev_socks5_server_construct (HevSocks5Server *self, int fd)
 
     HEV_SOCKS5 (self)->fd = fd;
 
-    self->fd = -1;
+    self->fds[0] = -1;
+    self->fds[1] = -1;
     self->timeout = -1;
 
     return 0;
@@ -596,8 +663,12 @@ hev_socks5_server_destruct (HevObject *base)
 
     LOG_D ("%p socks5 server destruct", self);
 
-    if (self->fd >= 0)
-        close (self->fd);
+    if (self->fds[0] >= 0)
+        close (self->fds[0]);
+    if (self->fds[1] >= 0)
+        close (self->fds[1]);
+    if (HEV_SOCKS5 (base)->data)
+        hev_free (HEV_SOCKS5 (base)->data);
 
     HEV_SOCKS5_TYPE->finalizer (base);
 }

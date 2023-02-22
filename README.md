@@ -5,7 +5,7 @@ HevSocks5Core is a simple, lightweight socks5 library.
 **Features**
 * IPv4/IPv6. (dual stack)
 * Standard `CONNECT` command.
-* Standard `UDP ASSOCIATE` command. (client only)
+* Standard `UDP ASSOCIATE` command.
 * Extended `FWD UDP` command. (UDP in TCP)
 * Simple username/password authentication.
 

@@ -29,7 +29,7 @@ struct _HevSocks5Server
 {
     HevSocks5 base;
 
-    int fd;
+    int fds[2];
     int timeout;
 };
 

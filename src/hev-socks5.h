@@ -45,6 +45,8 @@ struct _HevSocks5
         const char *user;
         const char *pass;
     } auth;
+
+    void *data;
 };
 
 struct _HevSocks5Class
