@@ -318,11 +318,9 @@ hev_socks5_udp_splicer (HevSocks5UDP *self, int fd)
     HevTask *task = hev_task_self ();
     HevSocks5UDPSplice splice;
     int stack_size;
+    int ufd;
 
     LOG_D ("%p socks5 udp splicer", self);
-
-    if (hev_task_add_fd (task, fd, POLLIN) < 0)
-        hev_task_mod_fd (task, fd, POLLIN);
 
     splice.task = task;
     splice.udp = self;
@@ -332,6 +330,13 @@ hev_socks5_udp_splicer (HevSocks5UDP *self, int fd)
     task = hev_task_new (stack_size);
     hev_task_run (task, splice_task_entry, &splice);
     task = hev_task_ref (task);
+
+    if (hev_task_add_fd (splice.task, fd, POLLIN) < 0)
+        hev_task_mod_fd (splice.task, fd, POLLIN);
+
+    ufd = hev_socks5_udp_get_fd (self);
+    if (hev_task_mod_fd (splice.task, ufd, POLLOUT) < 0)
+        hev_task_add_fd (splice.task, ufd, POLLOUT);
 
     for (;;) {
         int res;
