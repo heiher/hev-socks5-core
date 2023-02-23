@@ -294,14 +294,7 @@ splice_task_entry (void *data)
         hev_task_mod_fd (task, fd, POLLIN);
 
     for (;;) {
-        int res;
-
-        res = hev_socks5_udp_fwd_f (self, splice->fd);
-        if (res < 0)
-            break;
-
-        res = task_io_yielder (HEV_TASK_YIELD, self);
-        if (res < 0)
+        if (hev_socks5_udp_fwd_f (self, splice->fd) < 0)
             break;
     }
 
@@ -339,14 +332,7 @@ hev_socks5_udp_splicer (HevSocks5UDP *self, int fd)
         hev_task_add_fd (splice.task, ufd, POLLOUT);
 
     for (;;) {
-        int res;
-
-        res = hev_socks5_udp_fwd_b (self, fd);
-        if (res < 0)
-            break;
-
-        res = task_io_yielder (HEV_TASK_YIELD, self);
-        if (res < 0)
+        if (hev_socks5_udp_fwd_b (self, fd) < 0)
             break;
     }
 
