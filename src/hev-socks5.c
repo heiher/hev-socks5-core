@@ -34,14 +34,6 @@ hev_socks5_set_timeout (HevSocks5 *self, int timeout)
     self->timeout = timeout;
 }
 
-void
-hev_socks5_set_auth_user_pass (HevSocks5 *self, const char *user,
-                               const char *pass)
-{
-    self->auth.user = user;
-    self->auth.pass = pass;
-}
-
 static int
 hev_socks5_bind (HevSocks5 *self, int sock)
 {

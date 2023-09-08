@@ -40,12 +40,6 @@ struct _HevSocks5
     int timeout;
     HevSocks5Type type;
 
-    struct
-    {
-        const char *user;
-        const char *pass;
-    } auth;
-
     void *data;
 };
 
@@ -62,9 +56,6 @@ int hev_socks5_construct (HevSocks5 *self, HevSocks5Type type);
 
 int hev_socks5_get_timeout (HevSocks5 *self);
 void hev_socks5_set_timeout (HevSocks5 *self, int timeout);
-
-void hev_socks5_set_auth_user_pass (HevSocks5 *self, const char *user,
-                                    const char *pass);
 
 #ifdef __cplusplus
 }

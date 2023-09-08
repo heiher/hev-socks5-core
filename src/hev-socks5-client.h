@@ -27,6 +27,12 @@ typedef struct _HevSocks5ClientClass HevSocks5ClientClass;
 struct _HevSocks5Client
 {
     HevSocks5 base;
+
+    struct
+    {
+        const char *user;
+        const char *pass;
+    } auth;
 };
 
 struct _HevSocks5ClientClass
@@ -47,6 +53,9 @@ int hev_socks5_client_connect (HevSocks5Client *self, const char *addr,
 int hev_socks5_client_connect_fd (HevSocks5Client *self, int fd);
 
 int hev_socks5_client_handshake (HevSocks5Client *self);
+
+void hev_socks5_client_set_auth (HevSocks5Client *self, const char *user,
+                                 const char *pass);
 
 #ifdef __cplusplus
 }

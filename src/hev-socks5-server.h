@@ -13,6 +13,7 @@
 #include "hev-socks5.h"
 #include "hev-socks5-tcp.h"
 #include "hev-socks5-udp.h"
+#include "hev-socks5-authenticator.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,6 +32,7 @@ struct _HevSocks5Server
 
     int fds[2];
     int timeout;
+    HevSocks5Authenticator *auth;
 };
 
 struct _HevSocks5ServerClass
@@ -47,6 +49,8 @@ int hev_socks5_server_construct (HevSocks5Server *self, int fd);
 
 HevSocks5Server *hev_socks5_server_new (int fd);
 
+void hev_socks5_server_set_auth (HevSocks5Server *self,
+                                 HevSocks5Authenticator *auth);
 void hev_socks5_server_set_connect_timeout (HevSocks5Server *self, int timeout);
 
 int hev_socks5_server_run (HevSocks5Server *self);

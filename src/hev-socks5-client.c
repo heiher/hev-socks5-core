@@ -89,20 +89,20 @@ hev_socks5_client_write_request (HevSocks5Client *self)
     iov[n].iov_base = &auth;
     iov[n++].iov_len = 3;
 
-    if (!self->base.auth.user || !self->base.auth.pass) {
+    if (!self->auth.user || !self->auth.pass) {
         auth.methods[0] = HEV_SOCKS5_AUTH_METHOD_NONE;
     } else {
         auth.methods[0] = HEV_SOCKS5_AUTH_METHOD_USER;
         auth.methods[1] = HEV_SOCKS5_AUTH_VERSION_1;
-        auth.methods[2] = strlen (self->base.auth.user);
-        auth.methods[3] = strlen (self->base.auth.pass);
+        auth.methods[2] = strlen (self->auth.user);
+        auth.methods[3] = strlen (self->auth.pass);
         iov[n].iov_base = &auth.methods[1];
         iov[n++].iov_len = 2;
-        iov[n].iov_base = (void *)self->base.auth.user;
+        iov[n].iov_base = (void *)self->auth.user;
         iov[n++].iov_len = auth.methods[2];
         iov[n].iov_base = &auth.methods[3];
         iov[n++].iov_len = 1;
-        iov[n].iov_base = (void *)self->base.auth.pass;
+        iov[n].iov_base = (void *)self->auth.pass;
         iov[n++].iov_len = auth.methods[3];
     }
 
@@ -303,6 +303,16 @@ hev_socks5_client_handshake (HevSocks5Client *self)
         return -1;
 
     return 0;
+}
+
+void
+hev_socks5_client_set_auth (HevSocks5Client *self, const char *user,
+                            const char *pass)
+{
+    LOG_D ("%p socks5 client set auth", self);
+
+    self->auth.user = user;
+    self->auth.pass = pass;
 }
 
 int

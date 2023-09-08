@@ -45,6 +45,16 @@ hev_socks5_server_new (int fd)
 }
 
 void
+hev_socks5_server_set_auth (HevSocks5Server *self, HevSocks5Authenticator *auth)
+{
+    if (self->auth)
+        hev_object_unref (HEV_OBJECT (self->auth));
+
+    hev_object_ref (HEV_OBJECT (auth));
+    self->auth = auth;
+}
+
+void
 hev_socks5_server_set_connect_timeout (HevSocks5Server *self, int timeout)
 {
     self->timeout = timeout;
@@ -80,9 +90,10 @@ hev_socks5_server_read_auth_method (HevSocks5Server *self)
         return -1;
     }
 
-    method = HEV_SOCKS5_AUTH_METHOD_NONE;
-    if (self->base.auth.user && self->base.auth.pass)
+    if (self->auth)
         method = HEV_SOCKS5_AUTH_METHOD_USER;
+    else
+        method = HEV_SOCKS5_AUTH_METHOD_NONE;
 
     res = -1;
     for (i = 0; i < auth.method_len; i++) {
@@ -120,58 +131,56 @@ static int
 hev_socks5_server_read_auth_user (HevSocks5Server *self)
 {
     uint8_t ulen, plen;
-    uint8_t buf[257];
+    uint8_t user[257];
+    uint8_t pass[257];
+    uint8_t head[2];
     int res;
 
     LOG_D ("%p socks5 server read auth user", self);
 
-    res = hev_task_io_socket_recv (HEV_SOCKS5 (self)->fd, buf, 2, MSG_WAITALL,
+    res = hev_task_io_socket_recv (HEV_SOCKS5 (self)->fd, head, 2, MSG_WAITALL,
                                    task_io_yielder, self);
     if (res <= 0) {
         LOG_E ("%p socks5 server read auth user.ver", self);
         return -1;
     }
 
-    if (buf[0] != 1) {
-        LOG_E ("%p socks5 server auth user.ver %u", self, buf[0]);
+    if (head[0] != 1) {
+        LOG_E ("%p socks5 server auth user.ver %u", self, head[0]);
         return -1;
     }
 
-    ulen = buf[1];
+    ulen = head[1];
     if (ulen == 0) {
         LOG_E ("%p socks5 server auth user.ulen %u", self, ulen);
         return -1;
     }
 
-    res = hev_task_io_socket_recv (HEV_SOCKS5 (self)->fd, buf, ulen + 1,
+    res = hev_task_io_socket_recv (HEV_SOCKS5 (self)->fd, user, ulen + 1,
                                    MSG_WAITALL, task_io_yielder, self);
     if (res <= 0) {
         LOG_E ("%p socks5 server read auth user.user", self);
         return -1;
     }
 
-    plen = buf[ulen];
+    plen = user[ulen];
     if (plen == 0) {
         LOG_E ("%p socks5 server auth user.plen %u", self, plen);
         return -1;
     }
 
-    buf[ulen] = '\0';
-    if (strcmp (self->base.auth.user, (char *)buf) != 0) {
-        LOG_E ("%p socks5 server auth user %s", self, buf);
-        return -1;
-    }
-
-    res = hev_task_io_socket_recv (HEV_SOCKS5 (self)->fd, buf, plen,
+    res = hev_task_io_socket_recv (HEV_SOCKS5 (self)->fd, pass, plen,
                                    MSG_WAITALL, task_io_yielder, self);
     if (res <= 0) {
         LOG_E ("%p socks5 server read auth user.pass", self);
         return -1;
     }
 
-    buf[plen] = '\0';
-    if (strcmp (self->base.auth.pass, (char *)buf) != 0) {
-        LOG_E ("%p socks5 server auth pass %s", self, buf);
+    user[ulen] = '\0';
+    pass[plen] = '\0';
+    res = hev_socks5_authenticator_cmp (self->auth, (char *)user, (char *)pass);
+    if (res != 0) {
+        LOG_E ("%p socks5 server auth user: %s pass: %s", self, user, pass);
         return -1;
     }
 
@@ -667,6 +676,9 @@ hev_socks5_server_destruct (HevObject *base)
         close (self->fds[0]);
     if (self->fds[1] >= 0)
         close (self->fds[1]);
+
+    if (self->auth)
+        hev_object_unref (HEV_OBJECT (self->auth));
     if (HEV_SOCKS5 (base)->data)
         hev_free (HEV_SOCKS5 (base)->data);
 
