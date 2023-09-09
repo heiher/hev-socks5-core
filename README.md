@@ -7,7 +7,7 @@ HevSocks5Core is a simple, lightweight socks5 library.
 * Standard `CONNECT` command.
 * Standard `UDP ASSOCIATE` command.
 * Extended `FWD UDP` command. (UDP in TCP)
-* Simple username/password authentication.
+* Multiple username/password authentication.
 
 **Dependencies**
 * HevTaskSystem - https://github.com/heiher/hev-task-system
