@@ -12,6 +12,7 @@
 
 #include "hev-object.h"
 #include "hev-rbtree.h"
+#include "hev-socks5-user.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,11 +45,15 @@ int hev_socks5_authenticator_construct (HevSocks5Authenticator *self);
 HevSocks5Authenticator *hev_socks5_authenticator_new (void);
 
 int hev_socks5_authenticator_add (HevSocks5Authenticator *self,
-                                  const char *user, const char *pass);
+                                  HevSocks5User *user);
+
 int hev_socks5_authenticator_del (HevSocks5Authenticator *self,
-                                  const char *user);
-int hev_socks5_authenticator_cmp (HevSocks5Authenticator *self,
-                                  const char *user, const char *pass);
+                                  const char *name, unsigned int name_len);
+
+HevSocks5User *hev_socks5_authenticator_get (HevSocks5Authenticator *self,
+                                             const char *name,
+                                             unsigned int name_len);
+
 void hev_socks5_authenticator_clear (HevSocks5Authenticator *self);
 
 #ifdef __cplusplus

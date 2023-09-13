@@ -130,8 +130,9 @@ hev_socks5_server_write_auth_method (HevSocks5Server *self, int auth_method)
 static int
 hev_socks5_server_read_auth_user (HevSocks5Server *self)
 {
-    uint8_t ulen, plen;
-    uint8_t user[257];
+    HevSocks5User *user;
+    uint8_t nlen, plen;
+    uint8_t name[257];
     uint8_t pass[257];
     uint8_t head[2];
     int res;
@@ -150,20 +151,20 @@ hev_socks5_server_read_auth_user (HevSocks5Server *self)
         return -1;
     }
 
-    ulen = head[1];
-    if (ulen == 0) {
-        LOG_E ("%p socks5 server auth user.ulen %u", self, ulen);
+    nlen = head[1];
+    if (nlen == 0) {
+        LOG_E ("%p socks5 server auth user.nlen %u", self, nlen);
         return -1;
     }
 
-    res = hev_task_io_socket_recv (HEV_SOCKS5 (self)->fd, user, ulen + 1,
+    res = hev_task_io_socket_recv (HEV_SOCKS5 (self)->fd, name, nlen + 1,
                                    MSG_WAITALL, task_io_yielder, self);
     if (res <= 0) {
-        LOG_E ("%p socks5 server read auth user.user", self);
+        LOG_E ("%p socks5 server read auth user.name", self);
         return -1;
     }
 
-    plen = user[ulen];
+    plen = name[nlen];
     if (plen == 0) {
         LOG_E ("%p socks5 server auth user.plen %u", self, plen);
         return -1;
@@ -176,13 +177,21 @@ hev_socks5_server_read_auth_user (HevSocks5Server *self)
         return -1;
     }
 
-    user[ulen] = '\0';
-    pass[plen] = '\0';
-    res = hev_socks5_authenticator_cmp (self->auth, (char *)user, (char *)pass);
-    if (res != 0) {
-        LOG_E ("%p socks5 server auth user: %s pass: %s", self, user, pass);
+    user = hev_socks5_authenticator_get (self->auth, (char *)name, nlen);
+    if (!user) {
+        LOG_E ("%p socks5 server auth user: %s pass: %s", self, name, pass);
         return -1;
     }
+
+    res = hev_socks5_user_check (user, (char *)pass, plen);
+    if (res < 0) {
+        LOG_E ("%p socks5 server auth user: %s pass: %s", self, name, pass);
+        return -1;
+    }
+
+    hev_object_unref (HEV_OBJECT (self->auth));
+    hev_object_ref (HEV_OBJECT (user));
+    self->user = user;
 
     return 0;
 }
@@ -677,8 +686,8 @@ hev_socks5_server_destruct (HevObject *base)
     if (self->fds[1] >= 0)
         close (self->fds[1]);
 
-    if (self->auth)
-        hev_object_unref (HEV_OBJECT (self->auth));
+    if (self->obj)
+        hev_object_unref (self->obj);
     if (HEV_SOCKS5 (base)->data)
         hev_free (HEV_SOCKS5 (base)->data);
 

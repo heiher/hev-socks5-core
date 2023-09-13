@@ -10,9 +10,11 @@
 #ifndef __HEV_SOCKS5_SERVER_H__
 #define __HEV_SOCKS5_SERVER_H__
 
+#include "hev-object.h"
 #include "hev-socks5.h"
 #include "hev-socks5-tcp.h"
 #include "hev-socks5-udp.h"
+#include "hev-socks5-user.h"
 #include "hev-socks5-authenticator.h"
 
 #ifdef __cplusplus
@@ -32,7 +34,13 @@ struct _HevSocks5Server
 
     int fds[2];
     int timeout;
-    HevSocks5Authenticator *auth;
+
+    union
+    {
+        HevObject *obj;
+        HevSocks5User *user;
+        HevSocks5Authenticator *auth;
+    };
 };
 
 struct _HevSocks5ServerClass

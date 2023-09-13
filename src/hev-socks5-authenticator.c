@@ -15,16 +15,6 @@
 
 #include "hev-socks5-authenticator.h"
 
-typedef struct _HevSocks5AuthenticatorNode HevSocks5AuthenticatorNode;
-
-struct _HevSocks5AuthenticatorNode
-{
-    HevRBTreeNode node;
-
-    char *user;
-    char *pass;
-};
-
 HevSocks5Authenticator *
 hev_socks5_authenticator_new (void)
 {
@@ -47,18 +37,22 @@ hev_socks5_authenticator_new (void)
 }
 
 int
-hev_socks5_authenticator_add (HevSocks5Authenticator *self, const char *user,
-                              const char *pass)
+hev_socks5_authenticator_add (HevSocks5Authenticator *self, HevSocks5User *user)
 {
     HevRBTreeNode **new = &self->tree.root, *parent = NULL;
-    HevSocks5AuthenticatorNode *curr;
 
     while (*new) {
-        HevSocks5AuthenticatorNode *this;
+        HevSocks5User *this;
         int res;
 
-        this = container_of (*new, HevSocks5AuthenticatorNode, node);
-        res = strcmp (this->user, user);
+        this = container_of (*new, HevSocks5User, node);
+
+        if (this->name_len < user->name_len)
+            res = -1;
+        else if (this->name_len > user->name_len)
+            res = 1;
+        else
+            res = memcmp (this->name, user->name, this->name_len);
 
         parent = *new;
         if (res < 0)
@@ -69,30 +63,29 @@ hev_socks5_authenticator_add (HevSocks5Authenticator *self, const char *user,
             return -1;
     }
 
-    curr = calloc (1, sizeof (HevSocks5AuthenticatorNode));
-    if (!curr)
-        return -1;
-
-    curr->user = strdup (user);
-    curr->pass = strdup (pass);
-
-    hev_rbtree_node_link (&curr->node, parent, new);
-    hev_rbtree_insert_color (&self->tree, &curr->node);
+    hev_rbtree_node_link (&user->node, parent, new);
+    hev_rbtree_insert_color (&self->tree, &user->node);
 
     return 0;
 }
 
 int
-hev_socks5_authenticator_del (HevSocks5Authenticator *self, const char *user)
+hev_socks5_authenticator_del (HevSocks5Authenticator *self, const char *name,
+                              unsigned int name_len)
 {
     HevRBTreeNode *node = self->tree.root;
 
     while (node) {
-        HevSocks5AuthenticatorNode *this;
+        HevSocks5User *this;
         int res;
 
-        this = container_of (node, HevSocks5AuthenticatorNode, node);
-        res = strcmp (this->user, user);
+        this = container_of (node, HevSocks5User, node);
+        if (this->name_len < name_len)
+            res = -1;
+        else if (this->name_len > name_len)
+            res = 1;
+        else
+            res = memcmp (this->name, name, name_len);
 
         if (res < 0) {
             node = node->left;
@@ -100,10 +93,7 @@ hev_socks5_authenticator_del (HevSocks5Authenticator *self, const char *user)
             node = node->right;
         } else {
             hev_rbtree_erase (&self->tree, node);
-            free (this->user);
-            free (this->pass);
-            free (this);
-
+            hev_object_unref (HEV_OBJECT (this));
             return 0;
         }
     }
@@ -111,28 +101,33 @@ hev_socks5_authenticator_del (HevSocks5Authenticator *self, const char *user)
     return -1;
 }
 
-int
-hev_socks5_authenticator_cmp (HevSocks5Authenticator *self, const char *user,
-                              const char *pass)
+HevSocks5User *
+hev_socks5_authenticator_get (HevSocks5Authenticator *self, const char *name,
+                              unsigned int name_len)
 {
     HevRBTreeNode *node = self->tree.root;
 
     while (node) {
-        HevSocks5AuthenticatorNode *this;
+        HevSocks5User *this;
         int res;
 
-        this = container_of (node, HevSocks5AuthenticatorNode, node);
-        res = strcmp (this->user, user);
+        this = container_of (node, HevSocks5User, node);
+        if (this->name_len < name_len)
+            res = -1;
+        else if (this->name_len > name_len)
+            res = 1;
+        else
+            res = memcmp (this->name, name, name_len);
 
         if (res < 0)
             node = node->left;
         else if (res > 0)
             node = node->right;
         else
-            return strcmp (this->pass, pass);
+            return this;
     }
 
-    return -1;
+    return NULL;
 }
 
 void
@@ -141,13 +136,11 @@ hev_socks5_authenticator_clear (HevSocks5Authenticator *self)
     HevRBTreeNode *n;
 
     while ((n = hev_rbtree_first (&self->tree))) {
-        HevSocks5AuthenticatorNode *t;
+        HevSocks5User *t;
 
-        t = container_of (n, HevSocks5AuthenticatorNode, node);
+        t = container_of (n, HevSocks5User, node);
         hev_rbtree_erase (&self->tree, n);
-        free (t->user);
-        free (t->pass);
-        free (t);
+        hev_object_unref (HEV_OBJECT (t));
     }
 }
 
