@@ -42,6 +42,9 @@ HevObjectClass *hev_object_class (void);
 
 int hev_object_construct (HevObject *self);
 
+int hev_object_get_atomic (HevObject *self);
+void hev_object_set_atomic (HevObject *self, int atomic);
+
 HevObject *hev_object_ref (HevObject *self);
 void hev_object_unref (HevObject *self);
 

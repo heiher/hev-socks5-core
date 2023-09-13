@@ -7,12 +7,32 @@
  ============================================================================
  */
 
+#include <stdatomic.h>
+
 #include "hev-object.h"
+
+int
+hev_object_get_atomic (HevObject *self)
+{
+    return self->ref_count >> 31;
+}
+
+void
+hev_object_set_atomic (HevObject *self, int atomic)
+{
+    if (atomic)
+        self->ref_count |= 1U << 31;
+    else
+        self->ref_count &= ~(1U << 31);
+}
 
 HevObject *
 hev_object_ref (HevObject *self)
 {
-    self->ref_count++;
+    if (hev_object_get_atomic (self))
+        atomic_fetch_add_explicit (&self->ref_count, 1, memory_order_relaxed);
+    else
+        self->ref_count++;
 
     return self;
 }
@@ -21,10 +41,17 @@ void
 hev_object_unref (HevObject *self)
 {
     HevObjectClass *kptr = HEV_OBJECT_GET_CLASS (self);
+    unsigned int ref_count;
 
-    self->ref_count--;
+    if (hev_object_get_atomic (self)) {
+        ref_count = atomic_fetch_sub_explicit (&self->ref_count, 1,
+                                               memory_order_relaxed);
+        ref_count &= ~(1U << 31);
+    } else {
+        ref_count = self->ref_count--;
+    }
 
-    if (self->ref_count)
+    if (ref_count > 1)
         return;
 
     if (kptr->finalizer)
