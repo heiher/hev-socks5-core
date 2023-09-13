@@ -84,7 +84,7 @@ hev_socks5_client_udp_set_upstream_addr (HevSocks5Client *base,
     }
 
     klass = HEV_OBJECT_GET_CLASS (self);
-    res = klass->binder (HEV_SOCKS5 (self), fd);
+    res = klass->binder (HEV_SOCKS5 (self), fd, sadp);
     if (res < 0) {
         LOG_E ("%p socks5 client udp bind", self);
         close (fd);

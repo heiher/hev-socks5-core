@@ -35,7 +35,7 @@ hev_socks5_set_timeout (HevSocks5 *self, int timeout)
 }
 
 static int
-hev_socks5_bind (HevSocks5 *self, int sock)
+hev_socks5_bind (HevSocks5 *self, int sock, const struct sockaddr *dest)
 {
     return 0;
 }

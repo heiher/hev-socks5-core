@@ -439,7 +439,7 @@ hev_socks5_server_connect (HevSocks5Server *self, struct sockaddr_in6 *addr)
     }
 
     klass = HEV_OBJECT_GET_CLASS (self);
-    res = klass->binder (HEV_SOCKS5 (self), fd);
+    res = klass->binder (HEV_SOCKS5 (self), fd, (struct sockaddr *)addr);
     if (res < 0) {
         LOG_E ("%p socks5 server bind", self);
         close (fd);
@@ -480,7 +480,7 @@ hev_socks5_server_bind (HevSocks5Server *self, struct sockaddr_in6 *addr)
     }
 
     klass = HEV_OBJECT_GET_CLASS (self);
-    res = klass->binder (HEV_SOCKS5 (self), fd);
+    res = klass->binder (HEV_SOCKS5 (self), fd, (struct sockaddr *)addr);
     if (res < 0) {
         LOG_E ("%p socks5 server bind", self);
         close (fd);

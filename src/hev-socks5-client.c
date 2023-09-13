@@ -45,15 +45,15 @@ hev_socks5_client_connect_server (HevSocks5Client *self, const char *addr,
         return -1;
     }
 
+    sap = (struct sockaddr *)&saddr;
     klass = HEV_OBJECT_GET_CLASS (self);
-    res = klass->binder (HEV_SOCKS5 (self), fd);
+    res = klass->binder (HEV_SOCKS5 (self), fd, sap);
     if (res < 0) {
         LOG_E ("%p socks5 client bind", self);
         close (fd);
         return -1;
     }
 
-    sap = (struct sockaddr *)&saddr;
     res = hev_task_io_socket_connect (fd, sap, sizeof (saddr), task_io_yielder,
                                       self);
     if (res < 0) {

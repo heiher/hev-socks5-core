@@ -10,6 +10,8 @@
 #ifndef __HEV_SOCKS5_H__
 #define __HEV_SOCKS5_H__
 
+#include <netinet/in.h>
+
 #include "hev-object.h"
 
 #ifdef __cplusplus
@@ -47,7 +49,7 @@ struct _HevSocks5Class
 {
     HevObjectClass base;
 
-    int (*binder) (HevSocks5 *self, int sock);
+    int (*binder) (HevSocks5 *self, int sock, const struct sockaddr *dest);
 };
 
 HevObjectClass *hev_socks5_class (void);
