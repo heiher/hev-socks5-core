@@ -10,8 +10,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <hev-memory-allocator.h>
-
 #include "hev-compiler.h"
 #include "hev-socks5-logger-priv.h"
 
@@ -33,13 +31,13 @@ hev_socks5_authenticator_new (void)
     HevSocks5Authenticator *self;
     int res;
 
-    self = hev_malloc0 (sizeof (HevSocks5Authenticator));
+    self = calloc (1, sizeof (HevSocks5Authenticator));
     if (!self)
         return NULL;
 
     res = hev_socks5_authenticator_construct (self);
     if (res < 0) {
-        hev_free (self);
+        free (self);
         return NULL;
     }
 
@@ -71,7 +69,7 @@ hev_socks5_authenticator_add (HevSocks5Authenticator *self, const char *user,
             return -1;
     }
 
-    curr = hev_malloc (sizeof (HevSocks5AuthenticatorNode));
+    curr = calloc (1, sizeof (HevSocks5AuthenticatorNode));
     if (!curr)
         return -1;
 
@@ -104,7 +102,7 @@ hev_socks5_authenticator_del (HevSocks5Authenticator *self, const char *user)
             hev_rbtree_erase (&self->tree, node);
             free (this->user);
             free (this->pass);
-            hev_free (this);
+            free (this);
 
             return 0;
         }
@@ -149,7 +147,7 @@ hev_socks5_authenticator_clear (HevSocks5Authenticator *self)
         hev_rbtree_erase (&self->tree, n);
         free (t->user);
         free (t->pass);
-        hev_free (t);
+        free (t);
     }
 }
 
@@ -179,7 +177,7 @@ hev_socks5_authenticator_destruct (HevObject *base)
     hev_socks5_authenticator_clear (self);
 
     HEV_OBJECT_TYPE->finalizer (base);
-    hev_free (base);
+    free (base);
 }
 
 HevObjectClass *
