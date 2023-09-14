@@ -189,8 +189,8 @@ hev_socks5_server_read_auth_user (HevSocks5Server *self)
         return -1;
     }
 
-    hev_object_unref (HEV_OBJECT (self->auth));
     hev_object_ref (HEV_OBJECT (user));
+    hev_object_unref (HEV_OBJECT (self->auth));
     self->user = user;
 
     return 0;
