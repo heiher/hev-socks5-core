@@ -228,11 +228,17 @@ hev_socks5_server_auth (HevSocks5Server *self)
     if (res < 0)
         return -1;
 
-    if (method == HEV_SOCKS5_AUTH_METHOD_USER) {
+    switch (method) {
+    case HEV_SOCKS5_AUTH_METHOD_NONE:
+        break;
+    case HEV_SOCKS5_AUTH_METHOD_USER:
         res = hev_socks5_server_read_auth_user (self);
         res = hev_socks5_server_write_auth_user (self, res);
         if (res < 0)
             return -1;
+        break;
+    default:
+        return -1;
     }
 
     return 0;
