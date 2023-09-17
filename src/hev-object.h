@@ -1,8 +1,8 @@
 /*
  ============================================================================
  Name        : hev-object.h
- Author      : Heiher <r@hev.cc>
- Copyright   : Copyright (c) 2021 hev
+ Author      : hev <r@hev.cc>
+ Copyright   : Copyright (c) 2021 - 2023 hev
  Description : Object
  ============================================================================
  */
@@ -27,6 +27,7 @@ struct _HevObject
 {
     HevObjectClass *klass;
 
+    unsigned int atomic;
     unsigned int ref_count;
 };
 

@@ -1,8 +1,8 @@
 /*
  ============================================================================
  Name        : hev-object.c
- Author      : Heiher <r@hev.cc>
- Copyright   : Copyright (c) 2021 hev
+ Author      : hev <r@hev.cc>
+ Copyright   : Copyright (c) 2021 - 2023 hev
  Description : Object
  ============================================================================
  */
@@ -14,23 +14,22 @@
 int
 hev_object_get_atomic (HevObject *self)
 {
-    return self->ref_count >> 31;
+    return self->atomic;
 }
 
 void
 hev_object_set_atomic (HevObject *self, int atomic)
 {
-    if (atomic)
-        self->ref_count |= 1U << 31;
-    else
-        self->ref_count &= ~(1U << 31);
+    self->atomic = atomic;
 }
 
 HevObject *
 hev_object_ref (HevObject *self)
 {
-    if (hev_object_get_atomic (self))
-        atomic_fetch_add_explicit (&self->ref_count, 1, memory_order_relaxed);
+    unsigned int *rcp = &self->ref_count;
+
+    if (self->atomic)
+        atomic_fetch_add_explicit (rcp, 1, memory_order_relaxed);
     else
         self->ref_count++;
 
@@ -41,21 +40,18 @@ void
 hev_object_unref (HevObject *self)
 {
     HevObjectClass *kptr = HEV_OBJECT_GET_CLASS (self);
-    unsigned int ref_count;
+    unsigned int *rcp = &self->ref_count;
+    unsigned int rc;
 
-    if (hev_object_get_atomic (self)) {
-        ref_count = atomic_fetch_sub_explicit (&self->ref_count, 1,
-                                               memory_order_relaxed);
-        ref_count &= ~(1U << 31);
-    } else {
-        ref_count = self->ref_count--;
-    }
+    if (self->atomic)
+        rc = atomic_fetch_sub_explicit (rcp, 1, memory_order_relaxed);
+    else
+        rc = self->ref_count--;
 
-    if (ref_count > 1)
+    if (rc > 1)
         return;
 
-    if (kptr->finalizer)
-        kptr->finalizer (self);
+    kptr->finalizer (self);
 }
 
 int
