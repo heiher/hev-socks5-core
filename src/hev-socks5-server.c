@@ -586,7 +586,7 @@ hev_socks5_server_handshake (HevSocks5Server *self)
     }
 
     res = hev_socks5_server_write_response (self, rep, &addr);
-    if (res < 0)
+    if ((res < 0) || (rep != HEV_SOCKS5_RES_REP_SUCC))
         return -1;
 
     return 0;
