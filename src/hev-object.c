@@ -26,7 +26,7 @@ hev_object_set_atomic (HevObject *self, int atomic)
 HevObject *
 hev_object_ref (HevObject *self)
 {
-    unsigned int *rcp = &self->ref_count;
+    atomic_uint *rcp = (atomic_uint *)&self->ref_count;
 
     if (self->atomic)
         atomic_fetch_add_explicit (rcp, 1, memory_order_relaxed);
@@ -40,7 +40,7 @@ void
 hev_object_unref (HevObject *self)
 {
     HevObjectClass *kptr = HEV_OBJECT_GET_CLASS (self);
-    unsigned int *rcp = &self->ref_count;
+    atomic_uint *rcp = (atomic_uint *)&self->ref_count;
     unsigned int rc;
 
     if (self->atomic)
