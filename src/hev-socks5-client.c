@@ -29,11 +29,13 @@ hev_socks5_client_connect_server (HevSocks5Client *self, const char *addr,
     HevSocks5Class *klass;
     struct sockaddr_in6 saddr;
     struct sockaddr *sap;
+    int addr_type;
     int fd, res;
 
     LOG_D ("%p socks5 client connect server", self);
 
-    res = hev_socks5_resolve_to_sockaddr6 (addr, port, &saddr);
+    addr_type = hev_socks5_get_domain_addr_type (HEV_SOCKS5 (self));
+    res = hev_socks5_resolve_to_sockaddr6 (addr, port, addr_type, &saddr);
     if (res < 0) {
         LOG_E ("%p socks5 client resolve [%s]:%d", self, addr, port);
         return -1;

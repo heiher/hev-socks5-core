@@ -121,17 +121,21 @@ hev_socks5_resolve_ip (const char *addr, int port, struct sockaddr_in6 *saddr)
 }
 
 int
-hev_socks5_resolve_to_sockaddr6 (const char *addr, int port,
+hev_socks5_resolve_to_sockaddr6 (const char *addr, int port, int addr_type,
                                  struct sockaddr_in6 *saddr)
 {
     struct addrinfo *result = NULL;
+    struct addrinfo hints = { 0 };
     int res;
 
     res = hev_socks5_resolve_ip (addr, port, saddr);
     if (res == 0)
         return 0;
 
-    hev_task_dns_getaddrinfo (addr, NULL, NULL, &result);
+    hints.ai_family = addr_type;
+    hints.ai_socktype = SOCK_STREAM;
+
+    hev_task_dns_getaddrinfo (addr, NULL, &hints, &result);
     if (!result)
         return -1;
 

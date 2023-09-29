@@ -25,6 +25,7 @@ extern "C" {
 typedef struct _HevSocks5 HevSocks5;
 typedef struct _HevSocks5Class HevSocks5Class;
 typedef enum _HevSocks5Type HevSocks5Type;
+typedef enum _HevSocks5DomainAddrType HevSocks5DomainAddrType;
 
 enum _HevSocks5Type
 {
@@ -34,6 +35,13 @@ enum _HevSocks5Type
     HEV_SOCKS5_TYPE_UDP_IN_UDP,
 };
 
+enum _HevSocks5DomainAddrType
+{
+    HEV_SOCKS5_DOMAIN_ADDR_TYPE_IPV4 = AF_INET,
+    HEV_SOCKS5_DOMAIN_ADDR_TYPE_IPV6 = AF_INET6,
+    HEV_SOCKS5_DOMAIN_ADDR_TYPE_UNSPEC = AF_UNSPEC,
+};
+
 struct _HevSocks5
 {
     HevObject base;
@@ -41,6 +49,7 @@ struct _HevSocks5
     int fd;
     int timeout;
     HevSocks5Type type;
+    HevSocks5DomainAddrType domain_addr_type;
 
     void *data;
 };
@@ -58,6 +67,10 @@ int hev_socks5_construct (HevSocks5 *self, HevSocks5Type type);
 
 int hev_socks5_get_timeout (HevSocks5 *self);
 void hev_socks5_set_timeout (HevSocks5 *self, int timeout);
+
+HevSocks5DomainAddrType hev_socks5_get_domain_addr_type (HevSocks5 *self);
+void hev_socks5_set_domain_addr_type (HevSocks5 *self,
+                                      HevSocks5DomainAddrType type);
 
 #ifdef __cplusplus
 }

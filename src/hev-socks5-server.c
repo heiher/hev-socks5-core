@@ -288,6 +288,7 @@ hev_socks5_server_read_addr_name (HevSocks5Server *self, HevSocks5ReqRes *req,
                                   struct sockaddr_in6 *addr)
 {
     uint16_t port;
+    int addr_type;
     int addrlen;
     char *name;
     int res;
@@ -316,7 +317,8 @@ hev_socks5_server_read_addr_name (HevSocks5Server *self, HevSocks5ReqRes *req,
     name[req->addr.domain.len] = '\0';
     port = ntohs (port);
 
-    res = hev_socks5_resolve_to_sockaddr6 (name, port, addr);
+    addr_type = hev_socks5_get_domain_addr_type (HEV_SOCKS5 (self));
+    res = hev_socks5_resolve_to_sockaddr6 (name, port, addr_type, addr);
     if (res < 0) {
         LOG_E ("%p socks5 server resolve [%s]:%d", self, name, port);
         return -1;

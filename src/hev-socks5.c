@@ -34,6 +34,18 @@ hev_socks5_set_timeout (HevSocks5 *self, int timeout)
     self->timeout = timeout;
 }
 
+HevSocks5DomainAddrType
+hev_socks5_get_domain_addr_type (HevSocks5 *self)
+{
+    return self->domain_addr_type;
+}
+
+void
+hev_socks5_set_domain_addr_type (HevSocks5 *self, HevSocks5DomainAddrType type)
+{
+    self->domain_addr_type = type;
+}
+
 static int
 hev_socks5_bind (HevSocks5 *self, int sock, const struct sockaddr *dest)
 {
@@ -56,6 +68,7 @@ hev_socks5_construct (HevSocks5 *self, HevSocks5Type type)
     self->fd = -1;
     self->timeout = -1;
     self->type = type;
+    self->domain_addr_type = HEV_SOCKS5_DOMAIN_ADDR_TYPE_UNSPEC;
 
     return 0;
 }
