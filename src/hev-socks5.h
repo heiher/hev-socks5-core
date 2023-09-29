@@ -11,6 +11,7 @@
 #define __HEV_SOCKS5_H__
 
 #include <netinet/in.h>
+#include <sys/socket.h>
 
 #include "hev-object.h"
 
