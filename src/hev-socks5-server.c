@@ -320,7 +320,7 @@ hev_socks5_server_read_addr_name (HevSocks5Server *self, HevSocks5ReqRes *req,
     addr_type = hev_socks5_get_domain_addr_type (HEV_SOCKS5 (self));
     res = hev_socks5_resolve_to_sockaddr6 (name, port, addr_type, addr);
     if (res < 0) {
-        LOG_E ("%p socks5 server resolve [%s]:%d", self, name, port);
+        LOG_I ("%p socks5 server resolve [%s]:%d", self, name, port);
         return -1;
     }
 
