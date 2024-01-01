@@ -35,7 +35,6 @@ enum _HevSocks5UDPAlive
 struct _HevSocks5UDPSplice
 {
     HevSocks5UDP *udp;
-    HevTask *task;
     HevSocks5UDPAlive alive;
     int fd;
 };
@@ -313,7 +312,7 @@ splice_task_entry (void *data)
 
     fd = hev_task_io_dup (hev_socks5_udp_get_fd (self));
     if (fd < 0)
-        goto exit;
+        return;
 
     if (hev_task_add_fd (task, fd, POLLIN) < 0)
         hev_task_mod_fd (task, fd, POLLIN);
@@ -325,9 +324,6 @@ splice_task_entry (void *data)
 
     hev_task_del_fd (task, fd);
     close (fd);
-
-exit:
-    hev_task_wakeup (splice->task);
 }
 
 static int
@@ -340,36 +336,28 @@ hev_socks5_udp_splicer (HevSocks5UDP *self, int fd)
 
     LOG_D ("%p socks5 udp splicer", self);
 
-    splice.task = task;
     splice.udp = self;
     splice.alive = HEV_SOCKS5_UDP_ALIVE_F | HEV_SOCKS5_UDP_ALIVE_B;
     splice.fd = fd;
 
-    stack_size = hev_socks5_get_task_stack_size ();
-    task = hev_task_new (stack_size);
-    hev_task_run (task, splice_task_entry, &splice);
-    task = hev_task_ref (task);
-
-    if (hev_task_add_fd (splice.task, fd, POLLIN) < 0)
-        hev_task_mod_fd (splice.task, fd, POLLIN);
+    if (hev_task_add_fd (task, fd, POLLIN) < 0)
+        hev_task_mod_fd (task, fd, POLLIN);
 
     ufd = hev_socks5_udp_get_fd (self);
-    if (hev_task_mod_fd (splice.task, ufd, POLLOUT) < 0)
-        hev_task_add_fd (splice.task, ufd, POLLOUT);
+    if (hev_task_mod_fd (task, ufd, POLLOUT) < 0)
+        hev_task_add_fd (task, ufd, POLLOUT);
+
+    stack_size = hev_socks5_get_task_stack_size ();
+    task = hev_task_new (stack_size);
+    hev_task_ref (task);
+    hev_task_run (task, splice_task_entry, &splice);
 
     for (;;) {
         if (hev_socks5_udp_fwd_b (self, &splice) < 0)
             break;
     }
 
-    for (;;) {
-        if (hev_task_get_state (task) == HEV_TASK_STOPPED)
-            break;
-
-        hev_task_wakeup (task);
-        hev_task_yield (HEV_TASK_WAITIO);
-    }
-
+    hev_task_join (task);
     hev_task_unref (task);
 
     return 0;
