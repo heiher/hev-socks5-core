@@ -13,7 +13,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 
-#include "hev-object.h"
+#include <hev-object.h>
 
 #ifdef __cplusplus
 extern "C" {

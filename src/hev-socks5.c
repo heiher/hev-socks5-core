@@ -83,7 +83,7 @@ hev_socks5_destruct (HevObject *base)
     if (self->fd >= 0)
         close (self->fd);
 
-    HEV_OBJECT_TYPE->finalizer (base);
+    HEV_OBJECT_TYPE->destruct (base);
     hev_free (base);
 }
 
@@ -98,7 +98,7 @@ hev_socks5_class (void)
         memcpy (kptr, HEV_OBJECT_TYPE, sizeof (HevObjectClass));
 
         okptr->name = "HevSocks5";
-        okptr->finalizer = hev_socks5_destruct;
+        okptr->destruct = hev_socks5_destruct;
 
         kptr->binder = hev_socks5_bind;
     }

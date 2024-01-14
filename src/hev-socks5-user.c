@@ -64,7 +64,7 @@ hev_socks5_user_construct (HevSocks5User *self, const char *name,
 {
     int res;
 
-    res = hev_object_construct (&self->base);
+    res = hev_object_atomic_construct (&self->base);
     if (res < 0)
         return res;
 
@@ -93,7 +93,7 @@ hev_socks5_user_destruct (HevObject *base)
     free (self->name);
     free (self->pass);
 
-    HEV_OBJECT_TYPE->finalizer (base);
+    HEV_OBJECT_ATOMIC_TYPE->destruct (base);
     free (base);
 }
 
@@ -105,10 +105,10 @@ hev_socks5_user_class (void)
     HevObjectClass *okptr = HEV_OBJECT_CLASS (kptr);
 
     if (!okptr->name) {
-        memcpy (kptr, HEV_OBJECT_TYPE, sizeof (HevObjectClass));
+        memcpy (kptr, HEV_OBJECT_ATOMIC_TYPE, sizeof (HevObjectAtomicClass));
 
         okptr->name = "HevSocks5User";
-        okptr->finalizer = hev_socks5_user_destruct;
+        okptr->destruct = hev_socks5_user_destruct;
 
         kptr->checker = hev_socks5_user_checker;
     }

@@ -340,7 +340,7 @@ hev_socks5_client_destruct (HevObject *base)
 
     LOG_D ("%p socks5 client destruct", self);
 
-    HEV_SOCKS5_TYPE->finalizer (base);
+    HEV_SOCKS5_TYPE->destruct (base);
 }
 
 HevObjectClass *
@@ -354,7 +354,7 @@ hev_socks5_client_class (void)
         memcpy (kptr, HEV_SOCKS5_TYPE, sizeof (HevSocks5Class));
 
         okptr->name = "HevSocks5Client";
-        okptr->finalizer = hev_socks5_client_destruct;
+        okptr->destruct = hev_socks5_client_destruct;
     }
 
     return okptr;

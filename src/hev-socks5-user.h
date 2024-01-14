@@ -10,7 +10,8 @@
 #ifndef __HEV_SOCKS5_USER_H__
 #define __HEV_SOCKS5_USER_H__
 
-#include "hev-object.h"
+#include <hev-object-atomic.h>
+
 #include "hev-rbtree.h"
 
 #ifdef __cplusplus
@@ -26,7 +27,7 @@ typedef struct _HevSocks5UserClass HevSocks5UserClass;
 
 struct _HevSocks5User
 {
-    HevObject base;
+    HevObjectAtomic base;
 
     HevRBTreeNode node;
 
@@ -38,7 +39,7 @@ struct _HevSocks5User
 
 struct _HevSocks5UserClass
 {
-    HevObjectClass base;
+    HevObjectAtomicClass base;
 
     int (*checker) (HevSocks5User *self, const char *pass,
                     unsigned int pass_len);

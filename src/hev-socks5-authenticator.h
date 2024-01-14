@@ -10,7 +10,8 @@
 #ifndef __HEV_SOCKS5_AUTHENTICATOR_H__
 #define __HEV_SOCKS5_AUTHENTICATOR_H__
 
-#include "hev-object.h"
+#include <hev-object-atomic.h>
+
 #include "hev-rbtree.h"
 #include "hev-socks5-user.h"
 
@@ -28,14 +29,14 @@ typedef enum _HevSocks5AuthenticatorType HevSocks5AuthenticatorType;
 
 struct _HevSocks5Authenticator
 {
-    HevObject base;
+    HevObjectAtomic base;
 
     HevRBTree tree;
 };
 
 struct _HevSocks5AuthenticatorClass
 {
-    HevObjectClass base;
+    HevObjectAtomicClass base;
 };
 
 HevObjectClass *hev_socks5_authenticator_class (void);

@@ -10,7 +10,8 @@
 #ifndef __HEV_SOCKS5_SERVER_H__
 #define __HEV_SOCKS5_SERVER_H__
 
-#include "hev-object.h"
+#include <hev-object.h>
+
 #include "hev-socks5.h"
 #include "hev-socks5-tcp.h"
 #include "hev-socks5-udp.h"

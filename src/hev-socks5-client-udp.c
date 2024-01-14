@@ -151,7 +151,7 @@ hev_socks5_client_udp_destruct (HevObject *base)
     if (self->fd >= 0)
         close (self->fd);
 
-    HEV_SOCKS5_CLIENT_TYPE->finalizer (base);
+    HEV_SOCKS5_CLIENT_TYPE->destruct (base);
 }
 
 static void *
@@ -176,7 +176,7 @@ hev_socks5_client_udp_class (void)
         memcpy (kptr, HEV_SOCKS5_CLIENT_TYPE, sizeof (HevSocks5ClientClass));
 
         okptr->name = "HevSocks5ClientUDP";
-        okptr->finalizer = hev_socks5_client_udp_destruct;
+        okptr->destruct = hev_socks5_client_udp_destruct;
         okptr->iface = hev_socks5_client_udp_iface;
 
         ckptr = HEV_SOCKS5_CLIENT_CLASS (kptr);

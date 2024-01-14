@@ -699,7 +699,7 @@ hev_socks5_server_destruct (HevObject *base)
     if (HEV_SOCKS5 (base)->data)
         hev_free (HEV_SOCKS5 (base)->data);
 
-    HEV_SOCKS5_TYPE->finalizer (base);
+    HEV_SOCKS5_TYPE->destruct (base);
 }
 
 static void *
@@ -730,7 +730,7 @@ hev_socks5_server_class (void)
         memcpy (kptr, HEV_SOCKS5_TYPE, sizeof (HevSocks5Class));
 
         okptr->name = "HevSocks5Server";
-        okptr->finalizer = hev_socks5_server_destruct;
+        okptr->destruct = hev_socks5_server_destruct;
         okptr->iface = hev_socks5_server_iface;
 
         tiptr = &kptr->tcp;

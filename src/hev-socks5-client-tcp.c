@@ -154,7 +154,7 @@ hev_socks5_client_tcp_destruct (HevObject *base)
     if (self->addr)
         hev_free (self->addr);
 
-    HEV_SOCKS5_CLIENT_TYPE->finalizer (base);
+    HEV_SOCKS5_CLIENT_TYPE->destruct (base);
 }
 
 static void *
@@ -179,7 +179,7 @@ hev_socks5_client_tcp_class (void)
         memcpy (kptr, HEV_SOCKS5_CLIENT_TYPE, sizeof (HevSocks5ClientClass));
 
         okptr->name = "HevSocks5ClientTCP";
-        okptr->finalizer = hev_socks5_client_tcp_destruct;
+        okptr->destruct = hev_socks5_client_tcp_destruct;
         okptr->iface = hev_socks5_client_tcp_iface;
 
         ckptr = HEV_SOCKS5_CLIENT_CLASS (kptr);

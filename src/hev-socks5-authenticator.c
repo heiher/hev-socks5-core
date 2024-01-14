@@ -149,7 +149,7 @@ hev_socks5_authenticator_construct (HevSocks5Authenticator *self)
 {
     int res;
 
-    res = hev_object_construct (&self->base);
+    res = hev_object_atomic_construct (&self->base);
     if (res < 0)
         return res;
 
@@ -169,7 +169,7 @@ hev_socks5_authenticator_destruct (HevObject *base)
 
     hev_socks5_authenticator_clear (self);
 
-    HEV_OBJECT_TYPE->finalizer (base);
+    HEV_OBJECT_ATOMIC_TYPE->destruct (base);
     free (base);
 }
 
@@ -181,10 +181,10 @@ hev_socks5_authenticator_class (void)
     HevObjectClass *okptr = HEV_OBJECT_CLASS (kptr);
 
     if (!okptr->name) {
-        memcpy (kptr, HEV_OBJECT_TYPE, sizeof (HevObjectClass));
+        memcpy (kptr, HEV_OBJECT_ATOMIC_TYPE, sizeof (HevObjectAtomicClass));
 
         okptr->name = "HevSocks5Authenticator";
-        okptr->finalizer = hev_socks5_authenticator_destruct;
+        okptr->destruct = hev_socks5_authenticator_destruct;
     }
 
     return okptr;
