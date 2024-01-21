@@ -233,7 +233,7 @@ hev_socks5_server_auth (HevSocks5Server *self)
         break;
     case HEV_SOCKS5_AUTH_METHOD_USER:
         res = hev_socks5_server_read_auth_user (self);
-        res = hev_socks5_server_write_auth_user (self, res);
+        res |= hev_socks5_server_write_auth_user (self, res);
         if (res < 0)
             return -1;
         break;
