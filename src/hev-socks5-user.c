@@ -54,7 +54,10 @@ hev_socks5_user_checker (HevSocks5User *self, const char *pass,
     if (self->pass_len != pass_len)
         return -1;
 
-    return memcmp (self->pass, pass, pass_len);
+    if (memcmp (self->pass, pass, pass_len) != 0)
+        return -1;
+
+    return 0;
 }
 
 int
