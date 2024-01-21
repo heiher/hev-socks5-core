@@ -240,7 +240,7 @@ hev_socks5_udp_fwd_f (HevSocks5UDP *self, HevSocks5UDPSplice *splice)
     if (res <= 0) {
         if (res < -1) {
             splice->alive &= ~HEV_SOCKS5_UDP_ALIVE_F;
-            if (splice->alive)
+            if (splice->alive && hev_socks5_get_timeout (HEV_SOCKS5 (self)))
                 return 0;
         }
         LOG_D ("%p socks5 udp fwd f recv", self);
@@ -322,6 +322,7 @@ splice_task_entry (void *data)
             break;
     }
 
+    splice->alive &= ~HEV_SOCKS5_UDP_ALIVE_F;
     hev_task_del_fd (task, fd);
     close (fd);
 }
@@ -357,6 +358,7 @@ hev_socks5_udp_splicer (HevSocks5UDP *self, int fd)
             break;
     }
 
+    splice.alive &= ~HEV_SOCKS5_UDP_ALIVE_B;
     hev_task_join (task);
     hev_task_unref (task);
 
