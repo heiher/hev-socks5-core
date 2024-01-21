@@ -2,7 +2,7 @@
  ============================================================================
  Name        : hev-socks5-client.h
  Author      : Heiher <r@hev.cc>
- Copyright   : Copyright (c) 2021 - 2023 hev
+ Copyright   : Copyright (c) 2021 - 2024 hev
  Description : Socks5 Client
  ============================================================================
  */
@@ -52,7 +52,7 @@ int hev_socks5_client_connect (HevSocks5Client *self, const char *addr,
 
 int hev_socks5_client_connect_fd (HevSocks5Client *self, int fd);
 
-int hev_socks5_client_handshake (HevSocks5Client *self);
+int hev_socks5_client_handshake (HevSocks5Client *self, int pipeline);
 
 void hev_socks5_client_set_auth (HevSocks5Client *self, const char *user,
                                  const char *pass);
