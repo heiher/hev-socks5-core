@@ -48,6 +48,8 @@ struct _HevSocks5ServerClass
 {
     HevSocks5Class base;
 
+    int (*binder) (HevSocks5Server *self, int sock);
+
     HevSocks5TCPIface tcp;
     HevSocks5UDPIface udp;
 };
