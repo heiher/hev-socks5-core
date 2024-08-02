@@ -69,6 +69,7 @@ hev_socks5_construct (HevSocks5 *self, HevSocks5Type type)
     self->timeout = -1;
     self->type = type;
     self->domain_addr_type = HEV_SOCKS5_DOMAIN_ADDR_TYPE_UNSPEC;
+    self->version = HEV_SOCKS5_VERSION_5;
 
     return 0;
 }

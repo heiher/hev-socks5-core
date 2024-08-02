@@ -30,6 +30,7 @@ typedef struct _HevSocks5UDPHdr HevSocks5UDPHdr;
 
 enum _HevSocks5Version
 {
+    HEV_SOCKS5_VERSION_4 = 4,
     HEV_SOCKS5_VERSION_5 = 5,
 };
 
