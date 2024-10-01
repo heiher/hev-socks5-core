@@ -475,7 +475,6 @@ static int
 hev_socks5_server_bind (HevSocks5Server *self, struct sockaddr_in6 *addr)
 {
     HevSocks5ServerClass *sskptr = HEV_OBJECT_GET_CLASS (self);
-    HevSocks5Class *skptr = HEV_OBJECT_GET_CLASS (self);
     socklen_t alen;
     int one = 1;
     int res;
@@ -486,13 +485,6 @@ hev_socks5_server_bind (HevSocks5Server *self, struct sockaddr_in6 *addr)
     fd = hev_socks5_socket (SOCK_DGRAM);
     if (fd < 0) {
         LOG_E ("%p socks5 server socket dgram", self);
-        return -1;
-    }
-
-    res = skptr->binder (HEV_SOCKS5 (self), fd, (struct sockaddr *)addr);
-    if (res < 0) {
-        LOG_E ("%p socks5 server bind", self);
-        close (fd);
         return -1;
     }
 

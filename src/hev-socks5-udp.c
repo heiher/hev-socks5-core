@@ -36,6 +36,7 @@ struct _HevSocks5UDPSplice
 {
     HevSocks5UDP *udp;
     HevSocks5UDPAlive alive;
+    int bind;
     int fd;
 };
 
@@ -247,6 +248,16 @@ hev_socks5_udp_fwd_f (HevSocks5UDP *self, HevSocks5UDPSplice *splice)
         return -1;
     }
 
+    if (!splice->bind) {
+        HevSocks5Class *skptr = HEV_OBJECT_GET_CLASS (self);
+        int res = skptr->binder (HEV_SOCKS5 (self), splice->fd, saddr);
+        if (res < 0) {
+            LOG_E ("%p socks5 udp bind", self);
+            return -1;
+        }
+        splice->bind = 1;
+    }
+
     res = sendto (splice->fd, buf, res, 0, saddr, sizeof (addr));
     if (res <= 0) {
         if ((res < 0) && (errno == EAGAIN))
@@ -339,6 +350,7 @@ hev_socks5_udp_splicer (HevSocks5UDP *self, int fd)
 
     splice.udp = self;
     splice.alive = HEV_SOCKS5_UDP_ALIVE_F | HEV_SOCKS5_UDP_ALIVE_B;
+    splice.bind = 0;
     splice.fd = fd;
 
     if (hev_task_add_fd (task, fd, POLLIN) < 0)
