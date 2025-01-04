@@ -521,15 +521,7 @@ hev_socks5_server_bind (HevSocks5Server *self, struct sockaddr_in6 *addr)
         return -1;
     }
 
-    addr = hev_malloc (sizeof (struct sockaddr_in6));
-    if (!addr) {
-        LOG_E ("%p socks5 server socket addr", self);
-        close (fd);
-        return -1;
-    }
-
     self->fds[1] = fd;
-    HEV_SOCKS5 (self)->data = addr;
 
     return 0;
 }
@@ -714,8 +706,6 @@ hev_socks5_server_destruct (HevObject *base)
 
     if (self->obj)
         hev_object_unref (self->obj);
-    if (HEV_SOCKS5 (base)->data)
-        hev_free (HEV_SOCKS5 (base)->data);
 
     HEV_SOCKS5_TYPE->destruct (base);
 }
