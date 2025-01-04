@@ -506,7 +506,7 @@ hev_socks5_server_bind (HevSocks5Server *self, struct sockaddr_in6 *addr)
         return -1;
     }
 
-    res = sskptr->binder (self, fd);
+    res = sskptr->binder (self, fd, (struct sockaddr *)addr);
     if (res < 0) {
         LOG_E ("%p socks5 server bind", self);
         close (fd);
@@ -527,7 +527,8 @@ hev_socks5_server_bind (HevSocks5Server *self, struct sockaddr_in6 *addr)
 }
 
 static int
-hev_socks5_server_udp_bind (HevSocks5Server *self, int sock)
+hev_socks5_server_udp_bind (HevSocks5Server *self, int sock,
+                            const struct sockaddr *src)
 {
     struct sockaddr_in6 addr;
     socklen_t alen;

@@ -48,7 +48,7 @@ struct _HevSocks5ServerClass
 {
     HevSocks5Class base;
 
-    int (*binder) (HevSocks5Server *self, int sock);
+    int (*binder) (HevSocks5Server *self, int sock, const struct sockaddr *src);
 
     HevSocks5TCPIface tcp;
     HevSocks5UDPIface udp;
