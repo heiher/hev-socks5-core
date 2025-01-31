@@ -159,6 +159,7 @@ hev_socks5_udp_recvfrom_udp (HevSocks5UDP *self, void *buf, size_t len,
     int doff;
     int res;
     int fd;
+    uint8_t af = addr->sa_family;
 
     LOG_D ("%p socks5 udp recvfrom udp", self);
 
@@ -177,6 +178,7 @@ hev_socks5_udp_recvfrom_udp (HevSocks5UDP *self, void *buf, size_t len,
             return -1;
         HEV_SOCKS5 (self)->udp_associated = 1;
     }
+    addr->sa_family = af;
 
     udp = (HevSocks5UDPHdr *)rbuf;
     switch (udp->addr.atype) {
