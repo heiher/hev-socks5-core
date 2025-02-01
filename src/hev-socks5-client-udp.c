@@ -99,6 +99,7 @@ hev_socks5_client_udp_set_upstream_addr (HevSocks5Client *base,
         return -1;
     }
 
+    HEV_SOCKS5 (self)->udp_associated = 1;
     self->fd = fd;
 
     return 0;
