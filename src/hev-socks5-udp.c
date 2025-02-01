@@ -152,33 +152,37 @@ static int
 hev_socks5_udp_recvfrom_udp (HevSocks5UDP *self, void *buf, size_t len,
                              struct sockaddr *addr)
 {
+    struct sockaddr *saddr = NULL;
+    struct sockaddr_in6 taddr;
     HevSocks5UDPHdr *udp;
     uint8_t rbuf[1500];
-    socklen_t alen;
+    socklen_t alen = 0;
     ssize_t rlen;
     int doff;
     int res;
     int fd;
-    uint8_t af = addr->sa_family;
 
     LOG_D ("%p socks5 udp recvfrom udp", self);
 
+    if (!HEV_SOCKS5 (self)->udp_associated) {
+        saddr = (struct sockaddr *)&taddr;
+        alen = sizeof (struct sockaddr_in6);
+        HEV_SOCKS5 (self)->udp_associated = 1;
+    }
+
     fd = hev_socks5_udp_get_fd (self);
-    alen = sizeof (struct sockaddr_in6);
-    rlen = hev_task_io_socket_recvfrom (fd, rbuf, sizeof (rbuf), 0, addr, &alen,
-                                        task_io_yielder, self);
+    rlen = hev_task_io_socket_recvfrom (fd, rbuf, sizeof (rbuf), 0, saddr,
+                                        &alen, task_io_yielder, self);
     if (rlen < 4) {
         LOG_D ("%p socks5 udp read", self);
         return rlen;
     }
 
-    if (!HEV_SOCKS5 (self)->udp_associated) {
-        res = connect (fd, addr, alen);
+    if (saddr) {
+        res = connect (fd, saddr, alen);
         if (res < 0)
             return -1;
-        HEV_SOCKS5 (self)->udp_associated = 1;
     }
-    addr->sa_family = af;
 
     udp = (HevSocks5UDPHdr *)rbuf;
     switch (udp->addr.atype) {
