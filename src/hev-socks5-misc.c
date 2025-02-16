@@ -55,11 +55,17 @@ int
 hev_socks5_socket (int type)
 {
     HevTask *task = hev_task_self ();
-    int fd, res;
+    int fd, res, zero = 0;
 
     fd = hev_task_io_socket_socket (AF_INET6, type, 0);
     if (fd < 0)
         return -1;
+
+    res = setsockopt (fd, IPPROTO_IPV6, IPV6_V6ONLY, &zero, sizeof (zero));
+    if (res < 0) {
+        close (fd);
+        return -1;
+    }
 
     res = hev_task_add_fd (task, fd, POLLIN | POLLOUT);
     if (res < 0)
