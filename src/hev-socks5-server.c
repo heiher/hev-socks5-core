@@ -450,6 +450,7 @@ hev_socks5_server_connect (HevSocks5Server *self, struct sockaddr_in6 *addr)
     res = klass->binder (HEV_SOCKS5 (self), fd, (struct sockaddr *)addr);
     if (res < 0) {
         LOG_E ("%p socks5 server bind", self);
+        hev_task_del_fd (hev_task_self (), fd);
         close (fd);
         return -1;
     }
@@ -462,6 +463,7 @@ hev_socks5_server_connect (HevSocks5Server *self, struct sockaddr_in6 *addr)
 
     if (res < 0) {
         LOG_E ("%p socks5 server connect", self);
+        hev_task_del_fd (hev_task_self (), fd);
         close (fd);
         return -1;
     }
@@ -502,6 +504,7 @@ hev_socks5_server_bind (HevSocks5Server *self, struct sockaddr_in6 *addr)
     res = setsockopt (fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof (one));
     if (res < 0) {
         LOG_E ("%p socks5 server socket reuse", self);
+        hev_task_del_fd (hev_task_self (), fd);
         close (fd);
         return -1;
     }
@@ -509,6 +512,7 @@ hev_socks5_server_bind (HevSocks5Server *self, struct sockaddr_in6 *addr)
     res = sskptr->binder (self, fd, (struct sockaddr *)addr);
     if (res < 0) {
         LOG_E ("%p socks5 server bind", self);
+        hev_task_del_fd (hev_task_self (), fd);
         close (fd);
         return -1;
     }
@@ -517,6 +521,7 @@ hev_socks5_server_bind (HevSocks5Server *self, struct sockaddr_in6 *addr)
     res = getsockname (fd, (struct sockaddr *)addr, &alen);
     if (res < 0) {
         LOG_E ("%p socks5 server socket name", self);
+        hev_task_del_fd (hev_task_self (), fd);
         close (fd);
         return -1;
     }
@@ -697,13 +702,18 @@ static void
 hev_socks5_server_destruct (HevObject *base)
 {
     HevSocks5Server *self = HEV_SOCKS5_SERVER (base);
+    HevTask *task = hev_task_self ();
 
     LOG_D ("%p socks5 server destruct", self);
 
-    if (self->fds[0] >= 0)
+    if (self->fds[0] >= 0) {
+        hev_task_del_fd (task, self->fds[0]);
         close (self->fds[0]);
-    if (self->fds[1] >= 0)
+    }
+    if (self->fds[1] >= 0) {
+        hev_task_del_fd (task, self->fds[1]);
         close (self->fds[1]);
+    }
 
     if (self->obj)
         hev_object_unref (self->obj);

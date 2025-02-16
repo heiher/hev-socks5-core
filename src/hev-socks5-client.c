@@ -52,6 +52,7 @@ hev_socks5_client_connect_server (HevSocks5Client *self, const char *addr,
     res = klass->binder (HEV_SOCKS5 (self), fd, sap);
     if (res < 0) {
         LOG_E ("%p socks5 client bind", self);
+        hev_task_del_fd (hev_task_self (), fd);
         close (fd);
         return -1;
     }
@@ -60,6 +61,7 @@ hev_socks5_client_connect_server (HevSocks5Client *self, const char *addr,
                                       self);
     if (res < 0) {
         LOG_E ("%p socks5 client connect", self);
+        hev_task_del_fd (hev_task_self (), fd);
         close (fd);
         return -1;
     }

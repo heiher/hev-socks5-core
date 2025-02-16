@@ -80,8 +80,10 @@ hev_socks5_destruct (HevObject *base)
 
     LOG_D ("%p socks5 destruct", self);
 
-    if (self->fd >= 0)
+    if (self->fd >= 0) {
+        hev_task_del_fd (hev_task_self (), self->fd);
         close (self->fd);
+    }
 
     HEV_OBJECT_TYPE->destruct (base);
     hev_free (base);
