@@ -21,8 +21,6 @@
 
 #include "hev-socks5-udp.h"
 
-#define task_io_yielder hev_socks5_task_io_yielder
-
 typedef enum _HevSocks5UDPAlive HevSocks5UDPAlive;
 typedef struct _HevSocks5UDPSplice HevSocks5UDPSplice;
 
@@ -39,6 +37,25 @@ struct _HevSocks5UDPSplice
     int bind;
     int fd;
 };
+
+static int
+task_io_yielder (HevTaskYieldType type, void *data)
+{
+    HevSocks5 *self = data;
+
+    if (self->type == HEV_SOCKS5_TYPE_UDP_IN_UDP) {
+        ssize_t res;
+        char buf;
+
+        res = recv (self->fd, &buf, sizeof (buf), 0);
+        if ((res == 0) || ((res < 0) && (errno != EAGAIN))) {
+            hev_socks5_set_timeout (self, 0);
+            return -1;
+        }
+    }
+
+    return hev_socks5_task_io_yielder (type, data);
+}
 
 int
 hev_socks5_udp_get_fd (HevSocks5UDP *self)
@@ -254,6 +271,8 @@ hev_socks5_udp_fwd_f (HevSocks5UDP *self, HevSocks5UDPSplice *splice)
             if (splice->alive && hev_socks5_get_timeout (HEV_SOCKS5 (self)))
                 return 0;
         }
+        if (HEV_SOCKS5 (self)->type == HEV_SOCKS5_TYPE_UDP_IN_TCP)
+            hev_socks5_set_timeout (HEV_SOCKS5 (self), 0);
         LOG_D ("%p socks5 udp fwd f recv", self);
         return -1;
     }
@@ -297,24 +316,17 @@ hev_socks5_udp_fwd_b (HevSocks5UDP *self, HevSocks5UDPSplice *splice)
 
     res = hev_task_io_socket_recvfrom (splice->fd, buf, sizeof (buf), 0, saddr,
                                        &addrlen, task_io_yielder, self);
+    if (res > 0)
+        res = hev_socks5_udp_sendto (self, buf, res, saddr);
     if (res <= 0) {
         if (res < -1) {
             splice->alive &= ~HEV_SOCKS5_UDP_ALIVE_B;
             if (splice->alive && hev_socks5_get_timeout (HEV_SOCKS5 (self)))
                 return 0;
         }
-        LOG_D ("%p socks5 udp fwd b recv", self);
-        return -1;
-    }
-
-    res = hev_socks5_udp_sendto (self, buf, res, saddr);
-    if (res <= 0) {
-        if (res < -1) {
-            splice->alive &= ~HEV_SOCKS5_UDP_ALIVE_B;
-            if (splice->alive && hev_socks5_get_timeout (HEV_SOCKS5 (self)))
-                return 0;
-        }
-        LOG_D ("%p socks5 udp fwd b send", self);
+        if (HEV_SOCKS5 (self)->type == HEV_SOCKS5_TYPE_UDP_IN_TCP)
+            hev_socks5_set_timeout (HEV_SOCKS5 (self), 0);
+        LOG_D ("%p socks5 udp fwd b recv send", self);
         return -1;
     }
 
