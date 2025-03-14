@@ -50,8 +50,6 @@ int hev_socks5_client_construct (HevSocks5Client *self, HevSocks5Type type);
 int hev_socks5_client_connect (HevSocks5Client *self, const char *addr,
                                int port);
 
-int hev_socks5_client_connect_fd (HevSocks5Client *self, int fd);
-
 int hev_socks5_client_handshake (HevSocks5Client *self, int pipeline);
 
 void hev_socks5_client_set_auth (HevSocks5Client *self, const char *user,

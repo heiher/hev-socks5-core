@@ -327,23 +327,6 @@ hev_socks5_client_connect (HevSocks5Client *self, const char *addr, int port)
     return 0;
 }
 
-int
-hev_socks5_client_connect_fd (HevSocks5Client *self, int fd)
-{
-    HevTask *task = hev_task_self ();
-    int res;
-
-    LOG_D ("%p socks5 client connect fd %d", self, fd);
-
-    HEV_SOCKS5 (self)->fd = fd;
-
-    res = hev_task_add_fd (task, fd, POLLIN | POLLOUT);
-    if (res < 0)
-        hev_task_mod_fd (task, fd, POLLIN | POLLOUT);
-
-    return 0;
-}
-
 static int
 hev_socks5_client_handshake_standard (HevSocks5Client *self)
 {
