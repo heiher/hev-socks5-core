@@ -46,11 +46,25 @@ hev_socks5_client_udp_new (HevSocks5Type type)
 static HevSocks5Addr *
 hev_socks5_client_udp_get_upstream_addr (HevSocks5Client *base)
 {
+    HevSocks5AddrFamily family;
     HevSocks5Addr *addr;
 
-    addr = hev_malloc0 (7);
-    if (addr)
-        addr->atype = HEV_SOCKS5_ADDR_TYPE_IPV4;
+    family = hev_socks5_get_addr_family (HEV_SOCKS5 (base));
+
+    switch (family) {
+    case HEV_SOCKS5_ADDR_FAMILY_IPV4:
+        addr = hev_malloc0 (7);
+        if (addr)
+            addr->atype = HEV_SOCKS5_ADDR_TYPE_IPV4;
+        break;
+    case HEV_SOCKS5_ADDR_FAMILY_IPV6:
+        addr = hev_malloc0 (19);
+        if (addr)
+            addr->atype = HEV_SOCKS5_ADDR_TYPE_IPV6;
+        break;
+    default:
+        addr = NULL;
+    }
 
     return addr;
 }

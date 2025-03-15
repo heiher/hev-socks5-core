@@ -107,7 +107,8 @@ hev_socks5_resolve_ipv6 (const char *addr, int port, struct sockaddr_in6 *saddr)
 }
 
 static int
-hev_socks5_resolve_ip (const char *addr, int port, struct sockaddr_in6 *saddr)
+hev_socks5_resolve_ip (const char *addr, int port, int *addr_family,
+                       struct sockaddr_in6 *saddr)
 {
     int res;
 
@@ -116,29 +117,33 @@ hev_socks5_resolve_ip (const char *addr, int port, struct sockaddr_in6 *saddr)
     saddr->sin6_port = htons (port);
 
     res = hev_socks5_resolve_ipv4 (addr, port, saddr);
-    if (res == 0)
+    if (res == 0) {
+        *addr_family = HEV_SOCKS5_ADDR_FAMILY_IPV4;
         return 0;
+    }
 
     res = hev_socks5_resolve_ipv6 (addr, port, saddr);
-    if (res == 0)
+    if (res == 0) {
+        *addr_family = HEV_SOCKS5_ADDR_FAMILY_IPV6;
         return 0;
+    }
 
     return -1;
 }
 
 int
-hev_socks5_resolve_to_sockaddr6 (const char *addr, int port, int addr_type,
+hev_socks5_resolve_to_sockaddr6 (const char *addr, int port, int *addr_family,
                                  struct sockaddr_in6 *saddr)
 {
     struct addrinfo *result = NULL;
     struct addrinfo hints = { 0 };
     int res;
 
-    res = hev_socks5_resolve_ip (addr, port, saddr);
+    res = hev_socks5_resolve_ip (addr, port, addr_family, saddr);
     if (res == 0)
         return 0;
 
-    hints.ai_family = addr_type;
+    hints.ai_family = *addr_family;
     hints.ai_socktype = SOCK_STREAM;
 
     hev_task_dns_getaddrinfo (addr, NULL, &hints, &result);
@@ -154,10 +159,12 @@ hev_socks5_resolve_to_sockaddr6 (const char *addr, int port, int addr_type,
         saddr->sin6_addr.s6_addr[10] = 0xff;
         saddr->sin6_addr.s6_addr[11] = 0xff;
         memcpy (&saddr->sin6_addr.s6_addr[12], &sa->sin_addr, 4);
+        *addr_family = HEV_SOCKS5_ADDR_FAMILY_IPV4;
         break;
     }
     case AF_INET6:
         memcpy (saddr, result->ai_addr, sizeof (*saddr));
+        *addr_family = HEV_SOCKS5_ADDR_FAMILY_IPV6;
         break;
     default:
         res = -1;

@@ -24,7 +24,8 @@ extern "C" {
 
 int hev_socks5_socket (int type);
 
-int hev_socks5_resolve_to_sockaddr6 (const char *addr, int port, int addr_type,
+int hev_socks5_resolve_to_sockaddr6 (const char *addr, int port,
+                                     int *addr_family,
                                      struct sockaddr_in6 *saddr);
 
 int hev_socks5_addr_to_sockaddr (HevSocks5Addr *addr, struct sockaddr *saddr);
