@@ -102,7 +102,7 @@ tcp_client_entry (void *data)
 {
     HevSocks5ClientTCP *tcp;
 
-    tcp = hev_socks5_client_tcp_new ("www.google.com", 443);
+    tcp = hev_socks5_client_tcp_new_name ("www.google.com", 443);
     hev_socks5_client_connect (HEV_SOCKS5_CLIENT (tcp), "127.0.0.1", 1080);
     hev_socks5_client_handshake (HEV_SOCKS5_CLIENT (tcp));
 
@@ -124,16 +124,13 @@ udp_client_entry (void *data)
     hev_socks5_client_handshake (HEV_SOCKS5_CLIENT (udp));
 
     /*
+     * HevSocks5Addr addr;
+     *
      * send udp packet:
-     *     hev_socks5_udp_sendto (HEV_SOCKS5_UDP (udp), data, len, addr);
+     *     hev_socks5_udp_sendto (HEV_SOCKS5_UDP (udp), data, len, &addr);
      *
-     * recv udp packet: (with source address family AF_INET6)
-     *     addr.sa_family = AF_INET6;
-     *     hev_socks5_udp_recvfrom (HEV_SOCKS5_UDP (udp), data, len, addr);
-     *
-     * recv udp packet: (with source address family AF_INET for IPv4 only)
-     *     addr.sa_family = AF_INET;
-     *     hev_socks5_udp_recvfrom (HEV_SOCKS5_UDP (udp), data, len, addr);
+     * recv udp packet:
+     *     hev_socks5_udp_recvfrom (HEV_SOCKS5_UDP (udp), data, len, &addr);
      */
 
     hev_object_unref (HEV_OBJECT (udp));

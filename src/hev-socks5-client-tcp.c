@@ -2,7 +2,7 @@
  ============================================================================
  Name        : hev-socks5-client-tcp.c
  Author      : Heiher <r@hev.cc>
- Copyright   : Copyright (c) 2021 - 2023 hev
+ Copyright   : Copyright (c) 2021 - 2025 hev
  Description : Socks5 Client TCP
  ============================================================================
  */
@@ -17,43 +17,70 @@
 #include "hev-socks5-client-tcp.h"
 
 HevSocks5ClientTCP *
-hev_socks5_client_tcp_new (const char *addr, int port)
+hev_socks5_client_tcp_new_name (const char *name, int port)
 {
     HevSocks5ClientTCP *self;
+    HevSocks5Addr addr;
     int res;
 
     self = hev_malloc0 (sizeof (HevSocks5ClientTCP));
     if (!self)
         return NULL;
 
-    res = hev_socks5_client_tcp_construct (self, addr, port);
+    hev_socks5_addr_from_name (&addr, name, port);
+    res = hev_socks5_client_tcp_construct (self, &addr);
     if (res < 0) {
         hev_free (self);
         return NULL;
     }
 
-    LOG_D ("%p socks5 client tcp new", self);
+    LOG_D ("%p socks5 client tcp new name", self);
 
     return self;
 }
 
 HevSocks5ClientTCP *
-hev_socks5_client_tcp_new_ip (struct sockaddr *addr)
+hev_socks5_client_tcp_new_ipv4 (const void *ipv4, int port)
 {
     HevSocks5ClientTCP *self;
+    HevSocks5Addr addr;
     int res;
 
     self = hev_malloc0 (sizeof (HevSocks5ClientTCP));
     if (!self)
         return NULL;
 
-    res = hev_socks5_client_tcp_construct_ip (self, addr);
+    hev_socks5_addr_from_ipv4 (&addr, ipv4, port);
+    res = hev_socks5_client_tcp_construct (self, &addr);
     if (res < 0) {
         hev_free (self);
         return NULL;
     }
 
-    LOG_D ("%p socks5 client tcp new ip", self);
+    LOG_D ("%p socks5 client tcp new ipv4", self);
+
+    return self;
+}
+
+HevSocks5ClientTCP *
+hev_socks5_client_tcp_new_ipv6 (const void *ipv6, int port)
+{
+    HevSocks5ClientTCP *self;
+    HevSocks5Addr addr;
+    int res;
+
+    self = hev_malloc0 (sizeof (HevSocks5ClientTCP));
+    if (!self)
+        return NULL;
+
+    hev_socks5_addr_from_ipv6 (&addr, ipv6, port);
+    res = hev_socks5_client_tcp_construct (self, &addr);
+    if (res < 0) {
+        hev_free (self);
+        return NULL;
+    }
+
+    LOG_D ("%p socks5 client tcp new ipv6", self);
 
     return self;
 }
@@ -78,11 +105,9 @@ hev_socks5_client_tcp_set_upstream_addr (HevSocks5Client *base,
 }
 
 int
-hev_socks5_client_tcp_construct (HevSocks5ClientTCP *self, const char *addr,
-                                 int port)
+hev_socks5_client_tcp_construct (HevSocks5ClientTCP *self,
+                                 const HevSocks5Addr *addr)
 {
-    int addrlen;
-    int nport;
     int res;
 
     res = hev_socks5_client_construct (&self->base, HEV_SOCKS5_TYPE_TCP);
@@ -93,51 +118,17 @@ hev_socks5_client_tcp_construct (HevSocks5ClientTCP *self, const char *addr,
 
     HEV_OBJECT (self)->klass = HEV_SOCKS5_CLIENT_TCP_TYPE;
 
-    addrlen = strlen (addr);
-    self->addr = hev_malloc (4 + addrlen);
+    res = hev_socks5_addr_len (addr);
+    self->addr = hev_malloc (res);
     if (!self->addr)
         return -1;
-
-    nport = htons (port);
-    self->addr->atype = HEV_SOCKS5_ADDR_TYPE_NAME;
-    self->addr->domain.len = addrlen;
-    memcpy (self->addr->domain.addr, addr, addrlen);
-    memcpy (self->addr->domain.addr + addrlen, &nport, 2);
-
-    LOG_I ("%p socks5 client tcp -> [%s]:%d", self, addr, port);
-
-    return 0;
-}
-
-int
-hev_socks5_client_tcp_construct_ip (HevSocks5ClientTCP *self,
-                                    struct sockaddr *addr)
-{
-    int res;
-
-    res = hev_socks5_client_construct (&self->base, HEV_SOCKS5_TYPE_TCP);
-    if (res < 0)
-        return res;
-
-    LOG_D ("%p socks5 client tcp construct ip", self);
-
-    HEV_OBJECT (self)->klass = HEV_SOCKS5_CLIENT_TCP_TYPE;
-
-    self->addr = hev_malloc (19);
-    if (!self->addr)
-        return -1;
-
-    res = hev_socks5_addr_from_sockaddr (self->addr, addr);
-    if (res <= 0) {
-        hev_free (self->addr);
-        return -1;
-    }
+    memcpy (self->addr, addr, res);
 
     if (LOG_ON ()) {
-        char buf[128];
         const char *str;
+        char buf[272];
 
-        str = hev_socks5_addr_to_string (self->addr, buf, sizeof (buf));
+        str = hev_socks5_addr_into_str (self->addr, buf, sizeof (buf));
         LOG_I ("%p socks5 client tcp -> %s", self, str);
     }
 

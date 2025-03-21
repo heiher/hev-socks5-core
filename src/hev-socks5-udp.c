@@ -2,7 +2,7 @@
  ============================================================================
  Name        : hev-socks5-udp.c
  Author      : Heiher <r@hev.cc>
- Copyright   : Copyright (c) 2021 - 2023 hev
+ Copyright   : Copyright (c) 2021 - 2025 hev
  Description : Socks5 UDP
  ============================================================================
  */
@@ -68,19 +68,19 @@ hev_socks5_udp_get_fd (HevSocks5UDP *self)
 
 int
 hev_socks5_udp_sendto (HevSocks5UDP *self, const void *buf, size_t len,
-                       struct sockaddr *addr)
+                       const HevSocks5Addr *addr)
 {
     HevSocks5UDPHdr udp;
-    struct iovec iov[2];
+    struct iovec iov[3];
     struct msghdr mh;
     int addrlen;
     int res;
 
     LOG_D ("%p socks5 udp sendto", self);
 
-    addrlen = hev_socks5_addr_from_sockaddr (&udp.addr, addr);
+    addrlen = hev_socks5_addr_len (addr);
     if (addrlen <= 0) {
-        LOG_D ("%p socks5 udp from sockaddr", self);
+        LOG_D ("%p socks5 udp addr", self);
         return -1;
     }
 
@@ -99,12 +99,14 @@ hev_socks5_udp_sendto (HevSocks5UDP *self, const void *buf, size_t len,
 
     memset (&mh, 0, sizeof (mh));
     mh.msg_iov = iov;
-    mh.msg_iovlen = 2;
+    mh.msg_iovlen = 3;
 
     iov[0].iov_base = &udp;
-    iov[0].iov_len = 3 + addrlen;
-    iov[1].iov_base = (void *)buf;
-    iov[1].iov_len = len;
+    iov[0].iov_len = 3;
+    iov[1].iov_base = (void *)addr;
+    iov[1].iov_len = addrlen;
+    iov[2].iov_base = (void *)buf;
+    iov[2].iov_len = len;
 
     res = hev_task_io_socket_sendmsg (hev_socks5_udp_get_fd (self), &mh,
                                       MSG_WAITALL, task_io_yielder, self);
@@ -116,7 +118,7 @@ hev_socks5_udp_sendto (HevSocks5UDP *self, const void *buf, size_t len,
 
 static int
 hev_socks5_udp_recvfrom_tcp (HevSocks5UDP *self, void *buf, size_t len,
-                             struct sockaddr *addr)
+                             HevSocks5Addr *addr)
 {
     HevSocks5UDPHdr udp;
     struct iovec iov[2];
@@ -127,7 +129,7 @@ hev_socks5_udp_recvfrom_tcp (HevSocks5UDP *self, void *buf, size_t len,
     LOG_D ("%p socks5 udp recvfrom tcp", self);
 
     fd = hev_socks5_udp_get_fd (self);
-    res = hev_task_io_socket_recv (fd, &udp, 4, MSG_WAITALL, task_io_yielder,
+    res = hev_task_io_socket_recv (fd, &udp, 5, MSG_WAITALL, task_io_yielder,
                                    self);
     if (res <= 0) {
         LOG_D ("%p socks5 udp read udp head", self);
@@ -144,8 +146,8 @@ hev_socks5_udp_recvfrom_tcp (HevSocks5UDP *self, void *buf, size_t len,
     mh.msg_iov = iov;
     mh.msg_iovlen = 2;
 
-    iov[0].iov_base = &udp.addr.ipv4;
-    iov[0].iov_len = udp.hdrlen - 4;
+    iov[0].iov_base = &addr->domain.addr;
+    iov[0].iov_len = udp.hdrlen - 5;
     iov[1].iov_base = buf;
     iov[1].iov_len = udp.datlen;
 
@@ -156,18 +158,15 @@ hev_socks5_udp_recvfrom_tcp (HevSocks5UDP *self, void *buf, size_t len,
         return res;
     }
 
-    res = hev_socks5_addr_to_sockaddr (&udp.addr, addr);
-    if (res < 0) {
-        LOG_D ("%p socks5 udp to sockaddr", self);
-        return -1;
-    }
+    addr->atype = udp.addr.atype;
+    addr->domain.len = udp.addr.domain.len;
 
     return udp.datlen;
 }
 
 static int
 hev_socks5_udp_recvfrom_udp (HevSocks5UDP *self, void *buf, size_t len,
-                             struct sockaddr *addr)
+                             HevSocks5Addr *addr)
 {
     struct sockaddr *saddr = NULL;
     struct sockaddr_in6 taddr;
@@ -175,6 +174,7 @@ hev_socks5_udp_recvfrom_udp (HevSocks5UDP *self, void *buf, size_t len,
     uint8_t rbuf[1500];
     socklen_t alen = 0;
     ssize_t rlen;
+    int addrlen;
     int doff;
     int res;
     int fd;
@@ -202,17 +202,13 @@ hev_socks5_udp_recvfrom_udp (HevSocks5UDP *self, void *buf, size_t len,
     }
 
     udp = (HevSocks5UDPHdr *)rbuf;
-    switch (udp->addr.atype) {
-    case HEV_SOCKS5_ADDR_TYPE_IPV4:
-        doff = 10;
-        break;
-    case HEV_SOCKS5_ADDR_TYPE_IPV6:
-        doff = 22;
-        break;
-    default:
+    addrlen = hev_socks5_addr_len (&udp->addr);
+    if (addrlen <= 0) {
+        LOG_D ("%p socks5 udp addr", self);
         return -1;
     }
 
+    doff = 3 + addrlen;
     if (doff > rlen) {
         LOG_D ("%p socks5 udp data len", self);
         return -1;
@@ -222,19 +218,14 @@ hev_socks5_udp_recvfrom_udp (HevSocks5UDP *self, void *buf, size_t len,
     if (len < rlen)
         rlen = len;
     memcpy (buf, rbuf + doff, rlen);
-
-    res = hev_socks5_addr_to_sockaddr (&udp->addr, addr);
-    if (res < 0) {
-        LOG_D ("%p socks5 udp to sockaddr", self);
-        return -1;
-    }
+    memcpy (addr, &udp->addr, addrlen);
 
     return rlen;
 }
 
 int
 hev_socks5_udp_recvfrom (HevSocks5UDP *self, void *buf, size_t len,
-                         struct sockaddr *addr)
+                         HevSocks5Addr *addr)
 {
     int res;
 
@@ -257,14 +248,15 @@ hev_socks5_udp_fwd_f (HevSocks5UDP *self, HevSocks5UDPSplice *splice)
 {
     struct sockaddr_in6 addr;
     struct sockaddr *saddr;
+    HevSocks5Addr taddr;
     uint8_t buf[1500];
-    int res;
+    int addr_family;
+    ssize_t res;
+    int ret;
 
     LOG_D ("%p socks5 udp fwd f", self);
 
-    addr.sin6_family = AF_INET6;
-    saddr = (struct sockaddr *)&addr;
-    res = hev_socks5_udp_recvfrom (self, buf, sizeof (buf), saddr);
+    res = hev_socks5_udp_recvfrom (self, buf, sizeof (buf), &taddr);
     if (res <= 0) {
         if (res < -1) {
             splice->alive &= ~HEV_SOCKS5_UDP_ALIVE_F;
@@ -277,10 +269,18 @@ hev_socks5_udp_fwd_f (HevSocks5UDP *self, HevSocks5UDPSplice *splice)
         return -1;
     }
 
+    saddr = (struct sockaddr *)&addr;
+    addr_family = hev_socks5_get_addr_family (HEV_SOCKS5 (self));
+    ret = hev_socks5_addr_into_sockaddr6 (&taddr, &addr, &addr_family);
+    if (ret < 0) {
+        LOG_D ("%p socks5 udp to sockaddr", self);
+        return -1;
+    }
+
     if (!splice->bind) {
         HevSocks5Class *skptr = HEV_OBJECT_GET_CLASS (self);
-        int res = skptr->binder (HEV_SOCKS5 (self), splice->fd, saddr);
-        if (res < 0) {
+        ret = skptr->binder (HEV_SOCKS5 (self), splice->fd, saddr);
+        if (ret < 0) {
             LOG_E ("%p socks5 udp bind", self);
             return -1;
         }
@@ -304,20 +304,21 @@ static int
 hev_socks5_udp_fwd_b (HevSocks5UDP *self, HevSocks5UDPSplice *splice)
 {
     struct sockaddr_in6 addr;
-    struct sockaddr *saddr;
     socklen_t addrlen;
     uint8_t buf[1500];
-    int res;
+    ssize_t res;
 
     LOG_D ("%p socks5 udp fwd b", self);
 
     addrlen = sizeof (addr);
-    saddr = (struct sockaddr *)&addr;
-
-    res = hev_task_io_socket_recvfrom (splice->fd, buf, sizeof (buf), 0, saddr,
-                                       &addrlen, task_io_yielder, self);
-    if (res > 0)
-        res = hev_socks5_udp_sendto (self, buf, res, saddr);
+    res = hev_task_io_socket_recvfrom (splice->fd, buf, sizeof (buf), 0,
+                                       (struct sockaddr *)&addr, &addrlen,
+                                       task_io_yielder, self);
+    if (res > 0) {
+        HevSocks5Addr taddr;
+        hev_socks5_addr_from_sockaddr6 (&taddr, &addr);
+        res = hev_socks5_udp_sendto (self, buf, res, &taddr);
+    }
     if (res <= 0) {
         if (res < -1) {
             splice->alive &= ~HEV_SOCKS5_UDP_ALIVE_B;

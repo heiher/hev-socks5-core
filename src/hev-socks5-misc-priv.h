@@ -2,7 +2,7 @@
  ============================================================================
  Name        : hev-socks5-misc-priv.h
  Author      : Heiher <r@hev.cc>
- Copyright   : Copyright (c) 2021 hev
+ Copyright   : Copyright (c) 2021 - 2025 hev
  Description : Socks5 Misc Private
  ============================================================================
  */
@@ -24,13 +24,8 @@ extern "C" {
 
 int hev_socks5_socket (int type);
 
-int hev_socks5_resolve_to_sockaddr6 (const char *addr, int port,
-                                     int *addr_family,
-                                     struct sockaddr_in6 *saddr);
-
-int hev_socks5_addr_to_sockaddr (HevSocks5Addr *addr, struct sockaddr *saddr);
-int hev_socks5_addr_from_sockaddr (HevSocks5Addr *addr, struct sockaddr *saddr);
-const char *hev_socks5_addr_to_string (HevSocks5Addr *addr, char *buf, int len);
+const char *hev_socks5_addr_into_str (const HevSocks5Addr *addr, char *buf,
+                                      int len);
 
 int hev_socks5_get_task_stack_size (void);
 

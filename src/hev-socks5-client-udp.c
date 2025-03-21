@@ -2,7 +2,7 @@
  ============================================================================
  Name        : hev-socks5-client-udp.c
  Author      : Heiher <r@hev.cc>
- Copyright   : Copyright (c) 2021 - 2023 hev
+ Copyright   : Copyright (c) 2021 - 2025 hev
  Description : Socks5 Client UDP
  ============================================================================
  */
@@ -77,15 +77,15 @@ hev_socks5_client_udp_set_upstream_addr (HevSocks5Client *base,
     struct sockaddr_in6 saddr;
     struct sockaddr *sadp;
     HevSocks5Class *klass;
+    int addr_family;
     int res;
     int fd;
 
     if (HEV_SOCKS5 (base)->type != HEV_SOCKS5_TYPE_UDP_IN_UDP)
         return 0;
 
-    saddr.sin6_family = AF_INET6;
-    sadp = (struct sockaddr *)&saddr;
-    res = hev_socks5_addr_to_sockaddr (addr, sadp);
+    addr_family = hev_socks5_get_addr_family (HEV_SOCKS5 (self));
+    res = hev_socks5_addr_into_sockaddr6 (addr, &saddr, &addr_family);
     if (res < 0) {
         LOG_E ("%p socks5 client udp addr", self);
         return -1;
@@ -97,6 +97,7 @@ hev_socks5_client_udp_set_upstream_addr (HevSocks5Client *base,
         return -1;
     }
 
+    sadp = (struct sockaddr *)&saddr;
     klass = HEV_OBJECT_GET_CLASS (self);
     res = klass->binder (HEV_SOCKS5 (self), fd, sadp);
     if (res < 0) {

@@ -2,7 +2,7 @@
  ============================================================================
  Name        : hev-socks5-client-tcp.h
  Author      : Heiher <r@hev.cc>
- Copyright   : Copyright (c) 2021 hev
+ Copyright   : Copyright (c) 2021 - 2025 hev
  Description : Socks5 Client TCP
  ============================================================================
  */
@@ -10,9 +10,8 @@
 #ifndef __HEV_SOCKS5_CLIENT_TCP_H__
 #define __HEV_SOCKS5_CLIENT_TCP_H__
 
-#include <netinet/in.h>
-
 #include "hev-socks5-tcp.h"
+#include "hev-socks5-proto.h"
 
 #include "hev-socks5-client.h"
 
@@ -43,13 +42,12 @@ struct _HevSocks5ClientTCPClass
 
 HevObjectClass *hev_socks5_client_tcp_class (void);
 
-int hev_socks5_client_tcp_construct (HevSocks5ClientTCP *self, const char *addr,
-                                     int port);
-int hev_socks5_client_tcp_construct_ip (HevSocks5ClientTCP *self,
-                                        struct sockaddr *addr);
+int hev_socks5_client_tcp_construct (HevSocks5ClientTCP *self,
+                                     const HevSocks5Addr *addr);
 
-HevSocks5ClientTCP *hev_socks5_client_tcp_new (const char *addr, int port);
-HevSocks5ClientTCP *hev_socks5_client_tcp_new_ip (struct sockaddr *addr);
+HevSocks5ClientTCP *hev_socks5_client_tcp_new_name (const char *name, int port);
+HevSocks5ClientTCP *hev_socks5_client_tcp_new_ipv4 (const void *ipv4, int port);
+HevSocks5ClientTCP *hev_socks5_client_tcp_new_ipv6 (const void *ipv6, int port);
 
 #ifdef __cplusplus
 }

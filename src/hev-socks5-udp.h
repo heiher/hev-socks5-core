@@ -2,7 +2,7 @@
  ============================================================================
  Name        : hev-socks5-udp.h
  Author      : Heiher <r@hev.cc>
- Copyright   : Copyright (c) 2021 - 2023 hev
+ Copyright   : Copyright (c) 2021 - 2025 hev
  Description : Socks5 UDP
  ============================================================================
  */
@@ -10,7 +10,7 @@
 #ifndef __HEV_SOCKS5_UDP_H__
 #define __HEV_SOCKS5_UDP_H__
 
-#include <netinet/in.h>
+#include "hev-socks5-proto.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,10 +34,10 @@ void *hev_socks5_udp_iface (void);
 int hev_socks5_udp_get_fd (HevSocks5UDP *self);
 
 int hev_socks5_udp_sendto (HevSocks5UDP *self, const void *buf, size_t len,
-                           struct sockaddr *addr);
+                           const HevSocks5Addr *addr);
 
 int hev_socks5_udp_recvfrom (HevSocks5UDP *self, void *buf, size_t len,
-                             struct sockaddr *addr);
+                             HevSocks5Addr *addr);
 
 int hev_socks5_udp_splice (HevSocks5UDP *self, int fd);
 

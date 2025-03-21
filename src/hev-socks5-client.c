@@ -2,7 +2,7 @@
  ============================================================================
  Name        : hev-socks5-client.c
  Author      : Heiher <r@hev.cc>
- Copyright   : Copyright (c) 2021 - 2024 hev
+ Copyright   : Copyright (c) 2021 - 2025 hev
  Description : Socks5 Client
  ============================================================================
  */
@@ -35,7 +35,7 @@ hev_socks5_client_connect_server (HevSocks5Client *self, const char *addr,
     LOG_D ("%p socks5 client connect server", self);
 
     addr_family = hev_socks5_get_addr_family (HEV_SOCKS5 (self));
-    res = hev_socks5_resolve_to_sockaddr6 (addr, port, &addr_family, &saddr);
+    res = hev_socks5_name_into_sockaddr6 (addr, port, &saddr, &addr_family);
     if (res < 0) {
         LOG_E ("%p socks5 client resolve [%s]:%d", self, addr, port);
         return -1;
