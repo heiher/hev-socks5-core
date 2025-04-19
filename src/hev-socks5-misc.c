@@ -125,8 +125,9 @@ hev_socks5_addr_len (const HevSocks5Addr *addr)
 }
 
 int
-hev_socks5_addr_from_name (HevSocks5Addr *addr, const char *name, int port)
+hev_socks5_addr_from_name (HevSocks5Addr *addr, const char *name, int _port)
 {
+    uint16_t port = _port;
     addr->atype = HEV_SOCKS5_ADDR_TYPE_NAME;
     strncpy ((char *)addr->domain.addr, name, 256);
     addr->domain.len = strlen ((char *)addr->domain.addr);
