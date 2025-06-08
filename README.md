@@ -157,6 +157,39 @@ main (int argc, char *argv[])
 }
 ```
 
+## UDP in TCP
+
+UDP-in-TCP mode is a proprietary extension based on RFC 1928, designed to
+forward UDP packets within the primary SOCKS5 TCP stream. The protocol is
+defined as follows:
+
+### SOCKS5 Requests
+
+```
+    +----+-----+-------+------+----------+----------+
+    |VER | CMD |  RSV  | ATYP | DST.ADDR | DST.PORT |
+    +----+-----+-------+------+----------+----------+
+    | 1  |  1  | X'00' |  1   | Variable |    2     |
+    +----+-----+-------+------+----------+----------+
+```
+
+* CMD
+    * UDP IN TCP: X'05'
+
+### UDP Relays
+
+```
+    +--------+--------+------+----------+----------+----------+
+    | MSGLEN | HDRLEN | ATYP | DST.ADDR | DST.PORT |   DATA   |
+    +--------+--------+------+----------+----------+----------+
+    |   2    |   1    |  1   | Variable |    2     | Variable |
+    +--------+--------+------+----------+----------+----------+
+```
+
+- MSGLEN: The total length of the UDP relay message. `[MSGLEN, DATA]`
+- HDRLEN: The header length of the UDP relay message. `[MSGLEN, DST.PORT]`
+- ATYPE/DST.ADDR/DST.PORT: Fields follow the definitions specified in RFC 1928.
+
 ## Users
 
 * **HevSocks5Server** - https://github.com/heiher/hev-socks5-server
