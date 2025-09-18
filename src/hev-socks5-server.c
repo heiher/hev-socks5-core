@@ -399,7 +399,6 @@ static int
 hev_socks5_server_bind (HevSocks5Server *self, struct sockaddr_in6 *addr)
 {
     HevSocks5ServerClass *sskptr = HEV_OBJECT_GET_CLASS (self);
-    socklen_t alen;
     int one = 1;
     int res;
     int fd;
@@ -431,18 +430,9 @@ hev_socks5_server_bind (HevSocks5Server *self, struct sockaddr_in6 *addr)
         return -1;
     }
 
-    res = sskptr->binder (self, fd, (struct sockaddr *)addr);
+    res = sskptr->binder (self, fd, addr);
     if (res < 0) {
         LOG_E ("%p socks5 server bind", self);
-        hev_task_del_fd (hev_task_self (), fd);
-        close (fd);
-        return -1;
-    }
-
-    alen = sizeof (struct sockaddr_in6);
-    res = getsockname (fd, (struct sockaddr *)addr, &alen);
-    if (res < 0) {
-        LOG_E ("%p socks5 server socket name", self);
         hev_task_del_fd (hev_task_self (), fd);
         close (fd);
         return -1;
@@ -455,25 +445,30 @@ hev_socks5_server_bind (HevSocks5Server *self, struct sockaddr_in6 *addr)
 
 static int
 hev_socks5_server_udp_bind (HevSocks5Server *self, int sock,
-                            const struct sockaddr *src)
+                            struct sockaddr_in6 *src)
 {
-    struct sockaddr_in6 addr;
     socklen_t alen;
     int res;
 
     LOG_D ("%p socks5 server udp bind", self);
 
     alen = sizeof (struct sockaddr_in6);
-    res = getsockname (HEV_SOCKS5 (self)->fd, (struct sockaddr *)&addr, &alen);
+    res = getsockname (HEV_SOCKS5 (self)->fd, (struct sockaddr *)src, &alen);
     if (res < 0) {
-        LOG_E ("%p socks5 server socket name", self);
+        LOG_E ("%p socks5 server tcp socket name", self);
         return -1;
     }
 
-    addr.sin6_port = 0;
-    res = bind (sock, (struct sockaddr *)&addr, alen);
+    src->sin6_port = 0;
+    res = bind (sock, (struct sockaddr *)src, alen);
     if (res < 0) {
         LOG_E ("%p socks5 server socket bind", self);
+        return -1;
+    }
+
+    res = getsockname (sock, (struct sockaddr *)src, &alen);
+    if (res < 0) {
+        LOG_E ("%p socks5 server udp socket name", self);
         return -1;
     }
 
