@@ -30,6 +30,7 @@ static int udp_timeout = 60000;
 
 static int task_stack_size = 8192;
 static int udp_recv_buffer_size = 512 * 1024;
+static int udp_copy_buffer_nums = 10;
 
 int
 hev_socks5_task_io_yielder (HevTaskYieldType type, void *data)
@@ -369,4 +370,16 @@ void
 hev_socks5_set_udp_recv_buffer_size (int buffer_size)
 {
     udp_recv_buffer_size = buffer_size;
+}
+
+void
+hev_socks5_set_udp_copy_buffer_nums (int nums)
+{
+    udp_copy_buffer_nums = nums;
+}
+
+int
+hev_socks5_get_udp_copy_buffer_nums (void)
+{
+    return udp_copy_buffer_nums;
 }

@@ -32,6 +32,7 @@ int hev_socks5_get_tcp_timeout (void);
 int hev_socks5_get_udp_timeout (void);
 
 int hev_socks5_get_task_stack_size (void);
+int hev_socks5_get_udp_copy_buffer_nums (void);
 
 #ifdef __cplusplus
 }

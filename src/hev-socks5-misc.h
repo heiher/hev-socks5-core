@@ -28,6 +28,7 @@ void hev_socks5_set_udp_timeout (int timeout);
 
 void hev_socks5_set_task_stack_size (int stack_size);
 void hev_socks5_set_udp_recv_buffer_size (int buffer_size);
+void hev_socks5_set_udp_copy_buffer_nums (int nums);
 
 int hev_socks5_addr_len (const HevSocks5Addr *addr);
 int hev_socks5_addr_from_name (HevSocks5Addr *addr, const char *name, int port);
