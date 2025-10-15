@@ -268,9 +268,13 @@ hev_socks5_client_connect (HevSocks5Client *self, const char *addr, int port)
     struct sockaddr_in6 saddr;
     struct sockaddr *sap;
     int addr_family;
+    int timeout;
     int fd, res;
 
     LOG_D ("%p socks5 client connect [%s]:%d", self, addr, port);
+
+    timeout = hev_socks5_get_connect_timeout ();
+    hev_socks5_set_timeout (HEV_SOCKS5 (self), timeout);
 
     addr_family = hev_socks5_get_addr_family (HEV_SOCKS5 (self));
     res = hev_socks5_name_into_sockaddr6 (addr, port, &saddr, &addr_family);
@@ -392,6 +396,11 @@ hev_socks5_client_handshake_pipeline (HevSocks5Client *self)
 int
 hev_socks5_client_handshake (HevSocks5Client *self, int pipeline)
 {
+    int timeout;
+
+    timeout = hev_socks5_get_connect_timeout ();
+    hev_socks5_set_timeout (HEV_SOCKS5 (self), timeout);
+
     if (pipeline)
         return hev_socks5_client_handshake_pipeline (self);
 

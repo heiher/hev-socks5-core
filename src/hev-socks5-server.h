@@ -34,7 +34,6 @@ struct _HevSocks5Server
     HevSocks5 base;
 
     int fds[2];
-    int timeout;
 
     union
     {
@@ -62,7 +61,6 @@ HevSocks5Server *hev_socks5_server_new (int fd);
 
 void hev_socks5_server_set_auth (HevSocks5Server *self,
                                  HevSocks5Authenticator *auth);
-void hev_socks5_server_set_connect_timeout (HevSocks5Server *self, int timeout);
 
 int hev_socks5_server_run (HevSocks5Server *self);
 

@@ -54,12 +54,6 @@ hev_socks5_server_set_auth (HevSocks5Server *self, HevSocks5Authenticator *auth)
     self->auth = auth;
 }
 
-void
-hev_socks5_server_set_connect_timeout (HevSocks5Server *self, int timeout)
-{
-    self->timeout = timeout;
-}
-
 static int
 hev_socks5_server_read_auth_method (HevSocks5Server *self)
 {
@@ -377,18 +371,20 @@ hev_socks5_server_connect (HevSocks5Server *self, struct sockaddr_in6 *addr)
         return -1;
     }
 
-    timeout = hev_socks5_get_timeout (HEV_SOCKS5 (self));
-    hev_socks5_set_timeout (HEV_SOCKS5 (self), self->timeout);
-    res = hev_task_io_socket_connect (fd, (struct sockaddr *)addr,
-                                      sizeof (*addr), task_io_yielder, self);
+    timeout = hev_socks5_get_connect_timeout ();
     hev_socks5_set_timeout (HEV_SOCKS5 (self), timeout);
 
+    res = hev_task_io_socket_connect (fd, (struct sockaddr *)addr,
+                                      sizeof (*addr), task_io_yielder, self);
     if (res < 0) {
         LOG_E ("%p socks5 server connect", self);
         hev_task_del_fd (hev_task_self (), fd);
         close (fd);
         return -1;
     }
+
+    timeout = hev_socks5_get_tcp_timeout ();
+    hev_socks5_set_timeout (HEV_SOCKS5 (self), timeout);
 
     self->fds[0] = fd;
 
@@ -479,11 +475,15 @@ static int
 hev_socks5_server_handshake (HevSocks5Server *self)
 {
     struct sockaddr_in6 addr;
+    int timeout;
     int cmd;
     int rep;
     int res;
 
     LOG_D ("%p socks5 server handshake", self);
+
+    timeout = hev_socks5_get_tcp_timeout ();
+    hev_socks5_set_timeout (HEV_SOCKS5 (self), timeout);
 
     res = hev_socks5_server_auth (self);
     if (res < 0)
@@ -610,7 +610,6 @@ hev_socks5_server_construct (HevSocks5Server *self, int fd)
 
     self->fds[0] = -1;
     self->fds[1] = -1;
-    self->timeout = -1;
 
     return 0;
 }
