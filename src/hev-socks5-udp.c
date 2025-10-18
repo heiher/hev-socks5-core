@@ -174,9 +174,9 @@ hev_socks5_udp_recvmmsg_tcp (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
         res = hev_task_io_socket_recv (fd, &udp, 5, nonblock, task_io_yielder,
                                        self);
         if (res > 0 && res < 5)
-            res = hev_task_io_socket_recv (fd, (void *)&udp + res, 5 - res,
-                                           MSG_WAITALL, task_io_yielder, self);
-        if (res <= 0) {
+            res += hev_task_io_socket_recv (fd, (void *)&udp + res, 5 - res,
+                                            MSG_WAITALL, task_io_yielder, self);
+        if (res != 5) {
             if (rlen > 0)
                 break;
             if (res != -1 || errno != EAGAIN)
@@ -208,7 +208,7 @@ hev_socks5_udp_recvmmsg_tcp (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
 
         res = hev_task_io_socket_recvmsg (fd, &mh, MSG_WAITALL, task_io_yielder,
                                           self);
-        if (res <= 0) {
+        if (res != (addrlen - 2 + udp.datlen)) {
             LOG_D ("%p socks5 udp read udp data", self);
             return res;
         }

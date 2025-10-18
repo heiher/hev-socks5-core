@@ -66,7 +66,7 @@ hev_socks5_server_read_auth_method (HevSocks5Server *self)
 
     res = hev_task_io_socket_recv (HEV_SOCKS5 (self)->fd, &auth, 2, MSG_WAITALL,
                                    task_io_yielder, self);
-    if (res <= 0) {
+    if (res != 2) {
         LOG_E ("%p socks5 server read auth method", self);
         return -1;
     }
@@ -79,7 +79,7 @@ hev_socks5_server_read_auth_method (HevSocks5Server *self)
     res = hev_task_io_socket_recv (HEV_SOCKS5 (self)->fd, &auth.methods,
                                    auth.method_len, MSG_WAITALL,
                                    task_io_yielder, self);
-    if (res <= 0) {
+    if (res != auth.method_len) {
         LOG_E ("%p socks5 server read auth methods", self);
         return -1;
     }
@@ -135,7 +135,7 @@ hev_socks5_server_read_auth_user (HevSocks5Server *self)
 
     res = hev_task_io_socket_recv (HEV_SOCKS5 (self)->fd, head, 2, MSG_WAITALL,
                                    task_io_yielder, self);
-    if (res <= 0) {
+    if (res != 2) {
         LOG_E ("%p socks5 server read auth user.ver", self);
         return -1;
     }
@@ -153,7 +153,7 @@ hev_socks5_server_read_auth_user (HevSocks5Server *self)
 
     res = hev_task_io_socket_recv (HEV_SOCKS5 (self)->fd, name, nlen + 1,
                                    MSG_WAITALL, task_io_yielder, self);
-    if (res <= 0) {
+    if (res != (nlen + 1)) {
         LOG_E ("%p socks5 server read auth user.name", self);
         return -1;
     }
@@ -166,7 +166,7 @@ hev_socks5_server_read_auth_user (HevSocks5Server *self)
 
     res = hev_task_io_socket_recv (HEV_SOCKS5 (self)->fd, pass, plen,
                                    MSG_WAITALL, task_io_yielder, self);
-    if (res <= 0) {
+    if (res != plen) {
         LOG_E ("%p socks5 server read auth user.pass", self);
         return -1;
     }
@@ -251,7 +251,7 @@ hev_socks5_server_read_request (HevSocks5Server *self, int *cmd, int *rep,
 
     res = hev_task_io_socket_recv (HEV_SOCKS5 (self)->fd, &req, 5, MSG_WAITALL,
                                    task_io_yielder, self);
-    if (res <= 0) {
+    if (res != 5) {
         LOG_E ("%p socks5 server read request", self);
         return -1;
     }
@@ -280,7 +280,7 @@ hev_socks5_server_read_request (HevSocks5Server *self, int *cmd, int *rep,
 
     res = hev_task_io_socket_recv (HEV_SOCKS5 (self)->fd, req.addr.domain.addr,
                                    addrlen, MSG_WAITALL, task_io_yielder, self);
-    if (res <= 0) {
+    if (res != addrlen) {
         *rep = HEV_SOCKS5_RES_REP_ADDR;
         LOG_E ("%p socks5 server read addr", self);
         return 0;

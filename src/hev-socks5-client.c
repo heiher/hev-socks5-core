@@ -162,7 +162,7 @@ hev_socks5_client_read_auth_method (HevSocks5Client *self)
 
     res = hev_task_io_socket_recv (HEV_SOCKS5 (self)->fd, &auth, 2, MSG_WAITALL,
                                    task_io_yielder, self);
-    if (res <= 0) {
+    if (res != 2) {
         LOG_E ("%p socks5 client read auth", self);
         return -1;
     }
@@ -185,7 +185,7 @@ hev_socks5_client_read_auth_creds (HevSocks5Client *self)
 
     ret = hev_task_io_socket_recv (HEV_SOCKS5 (self)->fd, &res, 2, MSG_WAITALL,
                                    task_io_yielder, self);
-    if (ret <= 0) {
+    if (ret != 2) {
         LOG_E ("%p socks5 client read auth creds", self);
         return -1;
     }
@@ -217,7 +217,7 @@ hev_socks5_client_read_response (HevSocks5Client *self)
 
     ret = hev_task_io_socket_recv (HEV_SOCKS5 (self)->fd, &res, 4, MSG_WAITALL,
                                    task_io_yielder, self);
-    if (ret <= 0) {
+    if (ret != 4) {
         LOG_E ("%p socks5 client read response", self);
         return -1;
     }
@@ -246,7 +246,7 @@ hev_socks5_client_read_response (HevSocks5Client *self)
 
     ret = hev_task_io_socket_recv (HEV_SOCKS5 (self)->fd, &res.addr.ipv4,
                                    addrlen, MSG_WAITALL, task_io_yielder, self);
-    if (ret <= 0) {
+    if (ret != addrlen) {
         LOG_E ("%p socks5 client read addr", self);
         return -1;
     }
