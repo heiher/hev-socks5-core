@@ -398,7 +398,7 @@ hev_socks5_client_handshake (HevSocks5Client *self, int pipeline)
 {
     int timeout;
 
-    timeout = hev_socks5_get_connect_timeout ();
+    timeout = hev_socks5_get_tcp_timeout ();
     hev_socks5_set_timeout (HEV_SOCKS5 (self), timeout);
 
     if (pipeline)
