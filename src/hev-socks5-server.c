@@ -530,6 +530,8 @@ hev_socks5_server_handshake (HevSocks5Server *self)
 static int
 hev_socks5_server_service (HevSocks5Server *self)
 {
+    int timeout;
+
     LOG_D ("%p socks5 server service", self);
 
     switch (HEV_SOCKS5 (self)->type) {
@@ -537,9 +539,9 @@ hev_socks5_server_service (HevSocks5Server *self)
         hev_socks5_tcp_splice (HEV_SOCKS5_TCP (self), self->fds[0]);
         break;
     case HEV_SOCKS5_TYPE_UDP_IN_UDP:
-        hev_socks5_udp_splice (HEV_SOCKS5_UDP (self), self->fds[0]);
-        break;
     case HEV_SOCKS5_TYPE_UDP_IN_TCP:
+        timeout = hev_socks5_get_udp_timeout ();
+        hev_socks5_set_timeout (HEV_SOCKS5 (self), timeout);
         hev_socks5_udp_splice (HEV_SOCKS5_UDP (self), self->fds[0]);
         break;
     default:

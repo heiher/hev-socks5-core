@@ -397,14 +397,27 @@ int
 hev_socks5_client_handshake (HevSocks5Client *self, int pipeline)
 {
     int timeout;
+    int res;
 
     timeout = hev_socks5_get_tcp_timeout ();
     hev_socks5_set_timeout (HEV_SOCKS5 (self), timeout);
 
     if (pipeline)
-        return hev_socks5_client_handshake_pipeline (self);
+        res = hev_socks5_client_handshake_pipeline (self);
+    else
+        res = hev_socks5_client_handshake_standard (self);
 
-    return hev_socks5_client_handshake_standard (self);
+    switch (HEV_SOCKS5 (self)->type) {
+    case HEV_SOCKS5_TYPE_UDP_IN_TCP:
+    case HEV_SOCKS5_TYPE_UDP_IN_UDP:
+        timeout = hev_socks5_get_udp_timeout ();
+        hev_socks5_set_timeout (HEV_SOCKS5 (self), timeout);
+        break;
+    default:
+        break;
+    }
+
+    return res;
 }
 
 void

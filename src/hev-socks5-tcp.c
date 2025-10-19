@@ -41,10 +41,6 @@ int
 hev_socks5_tcp_splice (HevSocks5TCP *self, int fd)
 {
     HevSocks5TCPIface *iface;
-    int timeout;
-
-    timeout = hev_socks5_get_tcp_timeout ();
-    hev_socks5_set_timeout (HEV_SOCKS5 (self), timeout);
 
     iface = HEV_OBJECT_GET_IFACE (self, HEV_SOCKS5_TCP_TYPE);
     return iface->splicer (self, fd);

@@ -482,10 +482,6 @@ int
 hev_socks5_udp_splice (HevSocks5UDP *self, int fd)
 {
     HevSocks5UDPIface *iface;
-    int timeout;
-
-    timeout = hev_socks5_get_udp_timeout ();
-    hev_socks5_set_timeout (HEV_SOCKS5 (self), timeout);
 
     iface = HEV_OBJECT_GET_IFACE (self, HEV_SOCKS5_UDP_TYPE);
     return iface->splicer (self, fd);
