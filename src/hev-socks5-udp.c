@@ -62,7 +62,9 @@ hev_socks5_udp_sendmmsg_tcp (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
     struct msghdr mh;
     int i, res;
 
+    mh.msg_name = NULL;
     mh.msg_namelen = 0;
+    mh.msg_control = NULL;
     mh.msg_controllen = 0;
     mh.msg_iov = iov;
     mh.msg_iovlen = num * 3;
@@ -125,7 +127,9 @@ hev_socks5_udp_sendmmsg_udp (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
         iov[i * 3 + 2].iov_base = msgv[i].buf;
         iov[i * 3 + 2].iov_len = msgv[i].len;
 
+        mvec[i].msg_hdr.msg_name = NULL;
         mvec[i].msg_hdr.msg_namelen = 0;
+        mvec[i].msg_hdr.msg_control = NULL;
         mvec[i].msg_hdr.msg_controllen = 0;
         mvec[i].msg_hdr.msg_iov = &iov[i * 3];
         mvec[i].msg_hdr.msg_iovlen = 3;
@@ -196,7 +200,9 @@ hev_socks5_udp_recvmmsg_tcp (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
             return -1;
         }
 
+        mh.msg_name = NULL;
         mh.msg_namelen = 0;
+        mh.msg_control = NULL;
         mh.msg_controllen = 0;
         mh.msg_iov = iov;
         mh.msg_iovlen = 2;
@@ -240,7 +246,9 @@ hev_socks5_udp_recvmmsg_udp (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
         nonblock = MSG_DONTWAIT;
 
     for (i = 0; i < num; i++) {
+        mvec[i].msg_hdr.msg_name = NULL;
         mvec[i].msg_hdr.msg_namelen = 0;
+        mvec[i].msg_hdr.msg_control = NULL;
         mvec[i].msg_hdr.msg_controllen = 0;
         mvec[i].msg_hdr.msg_iov = &iov[i];
         mvec[i].msg_hdr.msg_iovlen = 1;
@@ -352,6 +360,7 @@ hev_socks5_udp_fwd_f (HevSocks5UDP *self, int fd, void *buf, unsigned int num,
 
             dvec[i].msg_hdr.msg_name = (struct sockaddr *)&addr[i];
             dvec[i].msg_hdr.msg_namelen = sizeof (struct sockaddr_in6);
+            dvec[i].msg_hdr.msg_control = NULL;
             dvec[i].msg_hdr.msg_controllen = 0;
             dvec[i].msg_hdr.msg_iov = &iov[i];
             dvec[i].msg_hdr.msg_iovlen = 1;
@@ -446,6 +455,7 @@ hev_socks5_udp_splicer (HevSocks5UDP *self, int fd_b)
         for (i = 0; i < num; i++) {
             vec[i].msg_hdr.msg_name = (struct sockaddr *)&addr[i];
             vec[i].msg_hdr.msg_namelen = sizeof (struct sockaddr_in6);
+            vec[i].msg_hdr.msg_control = NULL;
             vec[i].msg_hdr.msg_controllen = 0;
             vec[i].msg_hdr.msg_iov = &iov[i];
             vec[i].msg_hdr.msg_iovlen = 1;
