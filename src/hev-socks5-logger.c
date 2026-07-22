@@ -25,6 +25,9 @@ static HevSocks5LoggerLevel req_level;
 int
 hev_socks5_logger_init (HevSocks5LoggerLevel level, const char *path)
 {
+    if (!path)
+        return 0;
+
     req_level = level;
 
     if (0 == strcmp (path, "stdout"))
@@ -43,7 +46,8 @@ hev_socks5_logger_init (HevSocks5LoggerLevel level, const char *path)
 void
 hev_socks5_logger_fini (void)
 {
-    close (fd);
+    if (fd >= 0)
+        close (fd);
 }
 
 int
