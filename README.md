@@ -180,14 +180,14 @@ defined as follows:
 
 ```
     +--------+--------+------+----------+----------+----------+
-    | MSGLEN | HDRLEN | ATYP | DST.ADDR | DST.PORT |   DATA   |
+    | DATLEN | HDRLEN | ATYP | DST.ADDR | DST.PORT |   DATA   |
     +--------+--------+------+----------+----------+----------+
     |   2    |   1    |  1   | Variable |    2     | Variable |
     +--------+--------+------+----------+----------+----------+
 ```
 
-- MSGLEN: The total length of the UDP relay message. `[MSGLEN, DATA]`
-- HDRLEN: The header length of the UDP relay message. `[MSGLEN, DST.PORT]`
+- DATLEN: The data length of the UDP relay message. `[DATA]`
+- HDRLEN: The header length of the UDP relay message. `[DATLEN ... DST.PORT]`
 - ATYPE/DST.ADDR/DST.PORT: Fields follow the definitions specified in RFC 1928.
 
 ## Users
