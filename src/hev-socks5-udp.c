@@ -353,9 +353,9 @@ hev_socks5_udp_fwd_f (HevSocks5UDP *self, int fd, void *buf, unsigned int num,
         for (i = 0, n = 0; i < res; i++) {
             int family;
 
-            if (!svec[i].len || !svec[i].addr) {
+            if (!svec[i].addr) {
                 LOG_D ("%p socks5 udp invalid", self);
-                return -1;
+                continue;
             }
 
             memset (&addr[n], 0, sizeof (struct sockaddr_in6));
