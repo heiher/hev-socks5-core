@@ -348,9 +348,9 @@ hev_socks5_udp_fwd_f (HevSocks5UDP *self, int fd, void *buf, unsigned int num,
         struct sockaddr_in6 addr[res];
         struct mmsghdr dvec[res];
         struct iovec iov[res];
-        int ret;
+        int n, ret;
 
-        for (i = 0; i < res; i++) {
+        for (i = 0, n = 0; i < res; i++) {
             int family;
 
             if (!svec[i].len || !svec[i].addr) {
@@ -358,26 +358,27 @@ hev_socks5_udp_fwd_f (HevSocks5UDP *self, int fd, void *buf, unsigned int num,
                 return -1;
             }
 
-            memset (&addr[i], 0, sizeof (struct sockaddr_in6));
+            memset (&addr[n], 0, sizeof (struct sockaddr_in6));
             family = hev_socks5_get_addr_family (HEV_SOCKS5 (self));
-            ret = hev_socks5_addr_into_sockaddr6 (svec[i].addr, &addr[i],
+            ret = hev_socks5_addr_into_sockaddr6 (svec[i].addr, &addr[n],
                                                   &family);
             if (ret < 0) {
                 LOG_D ("%p socks5 udp sockaddr", self);
-                return -1;
+                continue;
             }
 
-            dvec[i].msg_hdr.msg_name = (struct sockaddr *)&addr[i];
-            dvec[i].msg_hdr.msg_namelen = sizeof (struct sockaddr_in6);
-            dvec[i].msg_hdr.msg_control = NULL;
-            dvec[i].msg_hdr.msg_controllen = 0;
-            dvec[i].msg_hdr.msg_iov = &iov[i];
-            dvec[i].msg_hdr.msg_iovlen = 1;
-            iov[i].iov_base = svec[i].buf;
-            iov[i].iov_len = svec[i].len;
+            dvec[n].msg_hdr.msg_name = (struct sockaddr *)&addr[n];
+            dvec[n].msg_hdr.msg_namelen = sizeof (struct sockaddr_in6);
+            dvec[n].msg_hdr.msg_control = NULL;
+            dvec[n].msg_hdr.msg_controllen = 0;
+            dvec[n].msg_hdr.msg_iov = &iov[n];
+            dvec[n].msg_hdr.msg_iovlen = 1;
+            iov[n].iov_base = svec[i].buf;
+            iov[n].iov_len = svec[i].len;
+            n++;
         }
 
-        if (!*bind) {
+        if (n && !*bind) {
             HevSocks5Class *skptr = HEV_OBJECT_GET_CLASS (self);
             struct sockaddr *addr = dvec[0].msg_hdr.msg_name;
             ret = skptr->binder (HEV_SOCKS5 (self), fd, addr);
@@ -388,13 +389,20 @@ hev_socks5_udp_fwd_f (HevSocks5UDP *self, int fd, void *buf, unsigned int num,
             *bind = 1;
         }
 
-        res = hev_task_io_socket_sendmmsg (fd, dvec, res, MSG_WAITALL,
-                                           task_io_yielder, self);
-    }
-    if (res <= 0) {
+        for (i = 0; i < n; i += ret) {
+            ret = hev_task_io_socket_sendmmsg (fd, &dvec[i], n - i, MSG_WAITALL,
+                                               task_io_yielder, self);
+            if (ret <= 0) {
+                if (ret == -2)
+                    return -1;
+                LOG_D ("%p socks5 udp fwd f send", self);
+                ret = 1;
+            }
+        }
+    } else {
         if (res == -1 && errno == EAGAIN)
             return 0;
-        LOG_D ("%p socks5 udp fwd f recv send", self);
+        LOG_D ("%p socks5 udp fwd f recv", self);
         return -1;
     }
 
