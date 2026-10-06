@@ -185,11 +185,16 @@ hev_socks5_udp_recvmmsg_tcp (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
                 break;
             if (res != -1 || errno != EAGAIN)
                 LOG_D ("%p socks5 udp read udp head", self);
+            if (res > 0) {
+                errno = EPIPE;
+                return -1;
+            }
             return res;
         }
 
         if (udp.hdrlen < 5) {
             LOG_D ("%p socks5 udp head len", self);
+            errno = EINVAL;
             return -1;
         }
 
@@ -197,6 +202,7 @@ hev_socks5_udp_recvmmsg_tcp (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
         udp.datlen = ntohs (udp.datlen);
         if (udp.datlen > (msgv[i].len - addrlen)) {
             LOG_D ("%p socks5 udp data len", self);
+            errno = EINVAL;
             return -1;
         }
 
@@ -216,7 +222,9 @@ hev_socks5_udp_recvmmsg_tcp (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
                                           self);
         if (res != (addrlen - 2 + udp.datlen)) {
             LOG_D ("%p socks5 udp read udp data", self);
-            return res;
+            if (res >= 0)
+                errno = EPIPE;
+            return -1;
         }
 
         msgv[i].addr = msgv[i].buf;
