@@ -197,7 +197,10 @@ defined as follows:
 * **HevSocks5Tunnel** - https://github.com/heiher/hev-socks5-tunnel
 
 ## Contributors
+
+* **egavr** - https://github.com/egavr
 * **hev** - https://hev.cc
+* **sergey larin** - https://github.com/cerg2010cerg2010
 * **spider84** - https://github.com/spider84
 
 ## License
