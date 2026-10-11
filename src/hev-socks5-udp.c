@@ -11,6 +11,8 @@
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
+#include <netinet/in.h>
+#include <netinet/udp.h>
 
 #include <hev-task.h>
 #include <hev-task-io.h>
@@ -99,6 +101,90 @@ hev_socks5_udp_sendmmsg_tcp (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
     return num;
 }
 
+#if defined(__linux__) && defined(UDP_SEGMENT)
+static int udp_gso_max_size = -1;
+
+static int
+hev_socks5_udp_gso_probe (void)
+{
+    int size = 1024;
+    int fd, res;
+
+    /* Kernels without UDP GSO would send the coalesced datagrams as one. */
+    fd = socket (AF_INET, SOCK_DGRAM, 0);
+    if (fd < 0)
+        return 0;
+    res = setsockopt (fd, SOL_UDP, UDP_SEGMENT, &size, sizeof (size));
+    close (fd);
+
+    return (res == 0) ? 65535 : 0;
+}
+
+static int
+hev_socks5_udp_sendmmsg_udp_gso (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
+                                 unsigned int num, struct iovec *iov)
+{
+    char ctrl[num][CMSG_SPACE (sizeof (uint16_t))];
+    struct mmsghdr mvec[num];
+    unsigned int segs[num];
+    int i, n, g, res;
+
+    /*
+     * Coalesce runs of equal sized datagrams (socks5 header included) into a
+     * single UDP GSO send, the kernel splits them into separate datagrams.
+     */
+    for (i = 0, g = 0; i < num; g++) {
+        size_t size = iov[i * 3 + 1].iov_len + 3 + msgv[i].len;
+        size_t total = size;
+        struct cmsghdr *cm;
+
+        for (n = 1; (i + n) < num && n < 64 && (int)size <= udp_gso_max_size;
+             n++) {
+            size_t s = iov[(i + n) * 3 + 1].iov_len + 3 + msgv[i + n].len;
+            if ((s != size) || ((total + s) > 65000))
+                break;
+            total += s;
+        }
+
+        mvec[g].msg_hdr.msg_name = NULL;
+        mvec[g].msg_hdr.msg_namelen = 0;
+        mvec[g].msg_hdr.msg_iov = &iov[i * 3];
+        mvec[g].msg_hdr.msg_iovlen = n * 3;
+        mvec[g].msg_hdr.msg_flags = 0;
+        mvec[g].msg_hdr.msg_control = NULL;
+        mvec[g].msg_hdr.msg_controllen = 0;
+        if (n > 1) {
+            mvec[g].msg_hdr.msg_control = ctrl[g];
+            mvec[g].msg_hdr.msg_controllen = sizeof (ctrl[g]);
+            cm = CMSG_FIRSTHDR (&mvec[g].msg_hdr);
+            cm->cmsg_level = SOL_UDP;
+            cm->cmsg_type = UDP_SEGMENT;
+            cm->cmsg_len = CMSG_LEN (sizeof (uint16_t));
+            *(uint16_t *)CMSG_DATA (cm) = size;
+        }
+        segs[g] = n;
+        i += n;
+    }
+
+    res = hev_task_io_socket_sendmmsg (hev_socks5_udp_get_fd (self), mvec, g,
+                                       MSG_WAITALL, task_io_yielder, self);
+    if (res <= 0) {
+        /* Segments larger than the path MTU are rejected, don't retry them. */
+        if ((errno == EINVAL) && (segs[0] > 1)) {
+            size_t size = iov[1].iov_len + 3 + msgv[0].len;
+            if ((int)size <= udp_gso_max_size)
+                udp_gso_max_size = size - 1;
+        }
+        return res;
+    }
+
+    for (i = 0, n = 0; i < res; i++)
+        n += segs[i];
+
+    return n;
+}
+#endif /* __linux__ && UDP_SEGMENT */
+
 static int
 hev_socks5_udp_sendmmsg_udp (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
                              unsigned int num)
@@ -134,6 +220,17 @@ hev_socks5_udp_sendmmsg_udp (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
         mvec[i].msg_hdr.msg_iov = &iov[i * 3];
         mvec[i].msg_hdr.msg_iovlen = 3;
     }
+
+#if defined(__linux__) && defined(UDP_SEGMENT)
+    if (udp_gso_max_size < 0)
+        udp_gso_max_size = hev_socks5_udp_gso_probe ();
+
+    if ((num > 1) && udp_gso_max_size) {
+        res = hev_socks5_udp_sendmmsg_udp_gso (self, msgv, num, iov);
+        if ((res > 0) || (errno != EINVAL))
+            return res;
+    }
+#endif /* __linux__ && UDP_SEGMENT */
 
     res = hev_task_io_socket_sendmmsg (hev_socks5_udp_get_fd (self), mvec, num,
                                        MSG_WAITALL, task_io_yielder, self);
@@ -292,7 +389,7 @@ hev_socks5_udp_recvmmsg_udp (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
         int doff;
 
         msgv[i].len = mvec[i].msg_len;
-        if (msgv[i].len < 4) {
+        if ((msgv[i].len < 4) || (mvec[i].msg_hdr.msg_flags & MSG_TRUNC)) {
             msgv[i].addr = NULL;
             msgv[i].len = 0;
             continue;
