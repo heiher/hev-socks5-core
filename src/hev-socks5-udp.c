@@ -19,6 +19,16 @@
 #include <hev-task-io-socket.h>
 #include <hev-memory-allocator.h>
 
+#if defined(_MSC_VER)
+#include <malloc.h>
+/* MSVC C has no VLAs. Preserve stack storage for the original forwarding
+ * flow; the caller must supply the same bounded batch size as before. */
+#define HEV_UDP_LOCAL_ARRAY(type, name, count) \
+    type *name = (type *)_alloca (sizeof (type) * (count))
+#else
+#define HEV_UDP_LOCAL_ARRAY(type, name, count) type name[count]
+#endif
+
 #include "hev-socks5.h"
 #include "hev-socks5-misc-priv.h"
 #include "hev-socks5-logger-priv.h"
@@ -59,8 +69,8 @@ static int
 hev_socks5_udp_sendmmsg_tcp (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
                              unsigned int num)
 {
-    struct iovec iov[num * 3];
-    HevSocks5UDPHdr udp[num];
+    HEV_UDP_LOCAL_ARRAY (struct iovec, iov, num * 3);
+    HEV_UDP_LOCAL_ARRAY (HevSocks5UDPHdr, udp, num);
     struct msghdr mh;
     int i, res;
 
@@ -125,8 +135,8 @@ hev_socks5_udp_sendmmsg_udp_gso (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
                                  unsigned int num, struct iovec *iov)
 {
     char ctrl[num][CMSG_SPACE (sizeof (uint16_t))];
-    struct mmsghdr mvec[num];
-    unsigned int segs[num];
+    HEV_UDP_LOCAL_ARRAY (struct mmsghdr, mvec, num);
+    HEV_UDP_LOCAL_ARRAY (unsigned int, segs, num);
     int i, n, g, res;
 
     /*
@@ -189,9 +199,9 @@ static int
 hev_socks5_udp_sendmmsg_udp (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
                              unsigned int num)
 {
-    struct iovec iov[num * 3];
-    struct mmsghdr mvec[num];
-    HevSocks5UDPHdr udp[num];
+    HEV_UDP_LOCAL_ARRAY (struct iovec, iov, num * 3);
+    HEV_UDP_LOCAL_ARRAY (struct mmsghdr, mvec, num);
+    HEV_UDP_LOCAL_ARRAY (HevSocks5UDPHdr, udp, num);
     int i, res;
 
     for (i = 0; i < num; i++) {
@@ -275,7 +285,7 @@ hev_socks5_udp_recvmmsg_tcp (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
         res = hev_task_io_socket_recv (fd, &udp, 5, nonblock, task_io_yielder,
                                        self);
         if (res > 0 && res < 5)
-            res += hev_task_io_socket_recv (fd, (void *)&udp + res, 5 - res,
+            res += hev_task_io_socket_recv (fd, (char *)&udp + res, 5 - res,
                                             MSG_WAITALL, task_io_yielder, self);
         if (res != 5) {
             if (rlen > 0)
@@ -310,9 +320,9 @@ hev_socks5_udp_recvmmsg_tcp (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
         mh.msg_iov = iov;
         mh.msg_iovlen = 2;
 
-        iov[0].iov_base = msgv[i].buf + 2;
+        iov[0].iov_base = (char *)msgv[i].buf + 2;
         iov[0].iov_len = addrlen - 2;
-        iov[1].iov_base = msgv[i].buf + addrlen;
+        iov[1].iov_base = (char *)msgv[i].buf + addrlen;
         iov[1].iov_len = udp.datlen;
 
         res = hev_task_io_socket_recvmsg (fd, &mh, MSG_WAITALL, task_io_yielder,
@@ -341,8 +351,8 @@ hev_socks5_udp_recvmmsg_udp (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
                              unsigned int num, int nonblock)
 {
     struct sockaddr_in6 taddr;
-    struct mmsghdr mvec[num];
-    struct iovec iov[num];
+    HEV_UDP_LOCAL_ARRAY (struct mmsghdr, mvec, num);
+    HEV_UDP_LOCAL_ARRAY (struct iovec, iov, num);
     int i, fd, res;
 
     fd = hev_socks5_udp_get_fd (self);
@@ -407,7 +417,7 @@ hev_socks5_udp_recvmmsg_udp (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
         }
 
         msgv[i].addr = &udp->addr;
-        msgv[i].buf += doff;
+        msgv[i].buf = (char *)msgv[i].buf + doff;
         msgv[i].len -= doff;
     }
 
@@ -432,19 +442,19 @@ static int
 hev_socks5_udp_fwd_f (HevSocks5UDP *self, int fd, void *buf, unsigned int num,
                       int *bind)
 {
-    HevSocks5UDPMsg svec[num];
+    HEV_UDP_LOCAL_ARRAY (HevSocks5UDPMsg, svec, num);
     int i, res;
 
     for (i = 0; i < num; i++) {
-        svec[i].buf = buf + UDP_BUF_SIZE * i;
+        svec[i].buf = (char *)buf + UDP_BUF_SIZE * i;
         svec[i].len = UDP_BUF_SIZE;
     }
 
     res = hev_socks5_udp_recvmmsg (self, svec, num, 1);
     if (res > 0) {
-        struct sockaddr_in6 addr[res];
-        struct mmsghdr dvec[res];
-        struct iovec iov[res];
+        HEV_UDP_LOCAL_ARRAY (struct sockaddr_in6, addr, res);
+        HEV_UDP_LOCAL_ARRAY (struct mmsghdr, dvec, res);
+        HEV_UDP_LOCAL_ARRAY (struct iovec, iov, res);
         int n, ret;
 
         for (i = 0, n = 0; i < res; i++) {
@@ -515,8 +525,12 @@ hev_socks5_udp_fwd_b (HevSocks5UDP *self, int fd, struct mmsghdr *svec,
     res = hev_task_io_socket_recvmmsg (fd, svec, num, MSG_DONTWAIT,
                                        task_io_yielder, self);
     if (res > 0) {
-        HevSocks5UDPMsg dvec[res];
+        HEV_UDP_LOCAL_ARRAY (HevSocks5UDPMsg, dvec, res);
+#if defined(_MSC_VER)
+        char (*saddr)[19] = _alloca (sizeof (*saddr) * res);
+#else
         char saddr[res][19];
+#endif
 
         for (i = 0; i < res; i++) {
             dvec[i].buf = svec[i].msg_hdr.msg_iov->iov_base;
@@ -561,9 +575,9 @@ hev_socks5_udp_splicer (HevSocks5UDP *self, int fd_b)
         hev_task_mod_fd (task, fd_b, POLLIN | POLLOUT);
 
     {
-        struct mmsghdr vec[num];
-        struct sockaddr_in6 addr[num];
-        struct iovec iov[num];
+        HEV_UDP_LOCAL_ARRAY (struct mmsghdr, vec, num);
+        HEV_UDP_LOCAL_ARRAY (struct sockaddr_in6, addr, num);
+        HEV_UDP_LOCAL_ARRAY (struct iovec, iov, num);
         int i;
 
         for (i = 0; i < num; i++) {
@@ -573,7 +587,7 @@ hev_socks5_udp_splicer (HevSocks5UDP *self, int fd_b)
             vec[i].msg_hdr.msg_controllen = 0;
             vec[i].msg_hdr.msg_iov = &iov[i];
             vec[i].msg_hdr.msg_iovlen = 1;
-            iov[i].iov_base = buf + UDP_BUF_SIZE * (num + i);
+            iov[i].iov_base = (char *)buf + UDP_BUF_SIZE * (num + i);
             iov[i].iov_len = UDP_BUF_SIZE;
         }
 
