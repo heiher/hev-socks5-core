@@ -12,7 +12,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <netinet/in.h>
+#if !defined(_MSC_VER)
 #include <netinet/udp.h>
+#endif
 
 #include <hev-task.h>
 #include <hev-task-io.h>
