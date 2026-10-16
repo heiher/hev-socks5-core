@@ -12,6 +12,13 @@
 
 #include <stdint.h>
 
+#if defined(_MSC_VER)
+#pragma pack (push, 1)
+#define HEV_SOCKS5_PROTO_PACKED
+#else
+#define HEV_SOCKS5_PROTO_PACKED __attribute__ ((packed))
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -77,7 +84,7 @@ struct _HevSocks5Auth
         uint8_t method_len;
     };
     uint8_t methods[256];
-} __attribute__ ((packed));
+} HEV_SOCKS5_PROTO_PACKED;
 
 struct _HevSocks5Addr
 {
@@ -88,19 +95,19 @@ struct _HevSocks5Addr
         {
             uint8_t addr[4];
             uint16_t port;
-        } ipv4 __attribute__ ((packed));
+        } ipv4 HEV_SOCKS5_PROTO_PACKED;
         struct
         {
             uint8_t addr[16];
             uint16_t port;
-        } ipv6 __attribute__ ((packed));
+        } ipv6 HEV_SOCKS5_PROTO_PACKED;
         struct
         {
             uint8_t len;
             uint8_t addr[256 + 2];
         } domain;
     };
-} __attribute__ ((packed));
+} HEV_SOCKS5_PROTO_PACKED;
 
 struct _HevSocks5ReqRes
 {
@@ -112,7 +119,7 @@ struct _HevSocks5ReqRes
     };
     uint8_t rsv;
     HevSocks5Addr addr;
-} __attribute__ ((packed));
+} HEV_SOCKS5_PROTO_PACKED;
 
 struct _HevSocks5UDPHdr
 {
@@ -123,13 +130,18 @@ struct _HevSocks5UDPHdr
         {
             uint16_t datlen;
             uint8_t hdrlen;
-        } __attribute__ ((packed));
+        } HEV_SOCKS5_PROTO_PACKED;
     };
     HevSocks5Addr addr;
-} __attribute__ ((packed));
+} HEV_SOCKS5_PROTO_PACKED;
 
 #ifdef __cplusplus
 }
 #endif
+
+#if defined(_MSC_VER)
+#pragma pack (pop)
+#endif
+#undef HEV_SOCKS5_PROTO_PACKED
 
 #endif /* __HEV_SOCKS5_PROTO_H__ */
