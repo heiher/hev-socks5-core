@@ -170,7 +170,7 @@ hev_socks5_udp_sendmmsg_udp_gso (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
                                        MSG_WAITALL, task_io_yielder, self);
     if (res <= 0) {
         /* Segments larger than the path MTU are rejected, don't retry them. */
-        if ((errno == EINVAL) && (segs[0] > 1)) {
+        if (((errno == EINVAL) || (errno == EMSGSIZE)) && (segs[0] > 1)) {
             size_t size = iov[1].iov_len + 3 + msgv[0].len;
             if ((int)size <= udp_gso_max_size)
                 udp_gso_max_size = size - 1;
@@ -227,7 +227,7 @@ hev_socks5_udp_sendmmsg_udp (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
 
     if ((num > 1) && udp_gso_max_size) {
         res = hev_socks5_udp_sendmmsg_udp_gso (self, msgv, num, iov);
-        if ((res > 0) || (errno != EINVAL))
+        if ((res > 0) || ((errno != EINVAL) && (errno != EMSGSIZE)))
             return res;
     }
 #endif /* __linux__ && UDP_SEGMENT */
