@@ -10,6 +10,8 @@
 #ifndef __HEV_COMPILER_H__
 #define __HEV_COMPILER_H__
 
+#include <stddef.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -24,7 +26,15 @@ extern "C" {
 #endif
 
 #ifndef EXPORT_SYMBOL
+#if defined(_MSC_VER)
+#if defined(HEV_SOCKS5_TUNNEL_BUILD)
+#define EXPORT_SYMBOL __declspec (dllexport)
+#else
+#define EXPORT_SYMBOL
+#endif
+#else
 #define EXPORT_SYMBOL __attribute__ ((visibility ("default")))
+#endif
 #endif
 
 #define barrier() __asm__ __volatile__ ("" : : : "memory")
@@ -85,7 +95,7 @@ __write_once_size (volatile void *dst, const void *src, int size)
         union                                          \
         {                                              \
             typeof (x) __val;                          \
-            char __c[1];                               \
+            char __c[1];                              \
         } __u = { .__val = (typeof (x))(val) };        \
         __write_once_size (&(x), __u.__c, sizeof (x)); \
         __u.__val;                                     \

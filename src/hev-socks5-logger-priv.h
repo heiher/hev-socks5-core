@@ -16,10 +16,10 @@
 extern "C" {
 #endif
 
-#define LOG_D(fmt...) hev_socks5_logger_log (HEV_SOCKS5_LOGGER_DEBUG, fmt)
-#define LOG_I(fmt...) hev_socks5_logger_log (HEV_SOCKS5_LOGGER_INFO, fmt)
-#define LOG_W(fmt...) hev_socks5_logger_log (HEV_SOCKS5_LOGGER_WARN, fmt)
-#define LOG_E(fmt...) hev_socks5_logger_log (HEV_SOCKS5_LOGGER_ERROR, fmt)
+#define LOG_D(...) hev_socks5_logger_log (HEV_SOCKS5_LOGGER_DEBUG, __VA_ARGS__)
+#define LOG_I(...) hev_socks5_logger_log (HEV_SOCKS5_LOGGER_INFO, __VA_ARGS__)
+#define LOG_W(...) hev_socks5_logger_log (HEV_SOCKS5_LOGGER_WARN, __VA_ARGS__)
+#define LOG_E(...) hev_socks5_logger_log (HEV_SOCKS5_LOGGER_ERROR, __VA_ARGS__)
 
 #define LOG_ON() hev_socks5_logger_enabled (HEV_SOCKS5_LOGGER_UNSET)
 #define LOG_ON_D() hev_socks5_logger_enabled (HEV_SOCKS5_LOGGER_DEBUG)
