@@ -12,7 +12,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <netinet/in.h>
+#if !defined(_WIN32)
 #include <netinet/udp.h>
+#endif
 
 #include <hev-task.h>
 #include <hev-task-io.h>
@@ -275,7 +277,7 @@ hev_socks5_udp_recvmmsg_tcp (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
         res = hev_task_io_socket_recv (fd, &udp, 5, nonblock, task_io_yielder,
                                        self);
         if (res > 0 && res < 5)
-            res += hev_task_io_socket_recv (fd, (void *)&udp + res, 5 - res,
+            res += hev_task_io_socket_recv (fd, (char *)&udp + res, 5 - res,
                                             MSG_WAITALL, task_io_yielder, self);
         if (res != 5) {
             if (rlen > 0)
@@ -310,9 +312,9 @@ hev_socks5_udp_recvmmsg_tcp (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
         mh.msg_iov = iov;
         mh.msg_iovlen = 2;
 
-        iov[0].iov_base = msgv[i].buf + 2;
+        iov[0].iov_base = (char *)msgv[i].buf + 2;
         iov[0].iov_len = addrlen - 2;
-        iov[1].iov_base = msgv[i].buf + addrlen;
+        iov[1].iov_base = (char *)msgv[i].buf + addrlen;
         iov[1].iov_len = udp.datlen;
 
         res = hev_task_io_socket_recvmsg (fd, &mh, MSG_WAITALL, task_io_yielder,
@@ -411,7 +413,7 @@ hev_socks5_udp_recvmmsg_udp (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
         }
 
         msgv[i].addr = &udp->addr;
-        msgv[i].buf += doff;
+        msgv[i].buf = (char *)msgv[i].buf + doff;
         msgv[i].len -= doff;
     }
 
@@ -440,7 +442,7 @@ hev_socks5_udp_fwd_f (HevSocks5UDP *self, int fd, void *buf, unsigned int num,
     int i, res;
 
     for (i = 0; i < num; i++) {
-        svec[i].buf = buf + UDP_BUF_SIZE * i;
+        svec[i].buf = (char *)buf + UDP_BUF_SIZE * i;
         svec[i].len = UDP_BUF_SIZE;
     }
 
@@ -577,7 +579,7 @@ hev_socks5_udp_splicer (HevSocks5UDP *self, int fd_b)
             vec[i].msg_hdr.msg_controllen = 0;
             vec[i].msg_hdr.msg_iov = &iov[i];
             vec[i].msg_hdr.msg_iovlen = 1;
-            iov[i].iov_base = buf + UDP_BUF_SIZE * (num + i);
+            iov[i].iov_base = (char *)buf + UDP_BUF_SIZE * (num + i);
             iov[i].iov_len = UDP_BUF_SIZE;
         }
 
