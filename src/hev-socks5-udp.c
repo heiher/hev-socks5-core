@@ -397,13 +397,17 @@ hev_socks5_udp_recvmmsg_udp (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
 
         if (addrlen <= 0) {
             LOG_D ("%p socks5 udp addr", self);
-            return -1;
+            msgv[i].addr = NULL;
+            msgv[i].len = 0;
+            continue;
         }
 
         doff = 3 + addrlen;
         if (doff > msgv[i].len) {
             LOG_D ("%p socks5 udp data len", self);
-            return -1;
+            msgv[i].addr = NULL;
+            msgv[i].len = 0;
+            continue;
         }
 
         msgv[i].addr = &udp->addr;
