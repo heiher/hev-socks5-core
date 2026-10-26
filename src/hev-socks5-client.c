@@ -125,6 +125,10 @@ hev_socks5_client_write_request (HevSocks5Client *self)
 
     klass = HEV_OBJECT_GET_CLASS (self);
     addr = klass->get_upstream_addr (self);
+    if (!addr) {
+        LOG_I ("%p socks5 client req.addr", self);
+        return -1;
+    }
 
     switch (addr->atype) {
     case HEV_SOCKS5_ADDR_TYPE_IPV4:
@@ -138,6 +142,7 @@ hev_socks5_client_write_request (HevSocks5Client *self)
         break;
     default:
         LOG_I ("%p socks5 client req.atype %u", self, addr->atype);
+        hev_free (addr);
         return -1;
     }
 
@@ -148,12 +153,11 @@ hev_socks5_client_write_request (HevSocks5Client *self)
     mh.msg_iovlen = 2;
     ret = hev_task_io_socket_sendmsg (HEV_SOCKS5 (self)->fd, &mh, MSG_WAITALL,
                                       task_io_yielder, self);
+    hev_free (addr);
     if (ret <= 0) {
         LOG_I ("%p socks5 client write request", self);
         return -1;
     }
-
-    hev_free (addr);
 
     return 0;
 }
