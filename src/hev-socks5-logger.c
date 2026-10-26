@@ -46,8 +46,10 @@ hev_socks5_logger_init (HevSocks5LoggerLevel level, const char *path)
 void
 hev_socks5_logger_fini (void)
 {
-    if (fd >= 0)
+    if (fd >= 0) {
         close (fd);
+        fd = -1;
+    }
 }
 
 int
