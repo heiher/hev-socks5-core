@@ -8,7 +8,7 @@
  */
 
 #include <string.h>
-#include <unistd.h>
+#include <hev-sys.h>
 
 #include <hev-task.h>
 #include <hev-task-io.h>
@@ -306,7 +306,7 @@ hev_socks5_client_connect (HevSocks5Client *self, const char *addr, int port)
     if (res < 0) {
         LOG_W ("%p socks5 client bind", self);
         hev_task_del_fd (hev_task_self (), fd);
-        close (fd);
+        hev_task_io_close (fd);
         return -1;
     }
 
@@ -315,7 +315,7 @@ hev_socks5_client_connect (HevSocks5Client *self, const char *addr, int port)
     if (res < 0) {
         LOG_I ("%p socks5 client connect", self);
         hev_task_del_fd (hev_task_self (), fd);
-        close (fd);
+        hev_task_io_close (fd);
         return -1;
     }
 

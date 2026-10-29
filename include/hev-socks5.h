@@ -10,8 +10,7 @@
 #ifndef __HEV_SOCKS5_H__
 #define __HEV_SOCKS5_H__
 
-#include <netinet/in.h>
-#include <sys/socket.h>
+#include <hev-sys.h>
 
 #include <hev-object.h>
 
