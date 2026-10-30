@@ -200,6 +200,7 @@ defined as follows:
 
 * **egavr** - https://github.com/egavr
 * **hev** - https://hev.cc
+* **mmjvox** - https://github.com/mmjvox
 * **sergey larin** - https://github.com/cerg2010cerg2010
 * **spider84** - https://github.com/spider84
 
