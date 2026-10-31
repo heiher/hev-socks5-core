@@ -199,6 +199,7 @@ defined as follows:
 ## Contributors
 
 * **egavr** - https://github.com/egavr
+* **fwx** - https://github.com/fwx
 * **hev** - https://hev.cc
 * **mmjvox** - https://github.com/mmjvox
 * **sergey larin** - https://github.com/cerg2010cerg2010
