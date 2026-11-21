@@ -62,7 +62,11 @@ hev_socks5_udp_sendmmsg_tcp (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
                              unsigned int num)
 {
     struct iovec iov[num * 3];
-    HevSocks5UDPHdr udp[num];
+    struct
+    {
+        uint16_t datlen;
+        uint8_t hdrlen;
+    } __attribute__ ((packed)) prefix[num];
     struct msghdr mh;
     int i, res;
 
@@ -82,11 +86,11 @@ hev_socks5_udp_sendmmsg_tcp (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
             return -1;
         }
 
-        udp[i].datlen = htons (msgv[i].len);
-        udp[i].hdrlen = 3 + addrlen;
+        prefix[i].datlen = htons (msgv[i].len);
+        prefix[i].hdrlen = sizeof (prefix[i]) + addrlen;
 
-        iov[i * 3].iov_base = &udp[i];
-        iov[i * 3].iov_len = 3;
+        iov[i * 3].iov_base = &prefix[i];
+        iov[i * 3].iov_len = sizeof (prefix[i]);
         iov[i * 3 + 1].iov_base = msgv[i].addr;
         iov[i * 3 + 1].iov_len = addrlen;
         iov[i * 3 + 2].iov_base = msgv[i].buf;
@@ -125,10 +129,10 @@ hev_socks5_udp_gso_probe (void)
 
 static int
 hev_socks5_udp_sendmmsg_udp_gso (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
-                                 unsigned int num, struct iovec *iov)
+                                 unsigned int num, struct iovec *iov,
+                                 struct mmsghdr *mvec)
 {
     char ctrl[num][CMSG_SPACE (sizeof (uint16_t))];
-    struct mmsghdr mvec[num];
     unsigned int segs[num];
     int i, n, g, res;
 
@@ -194,7 +198,7 @@ hev_socks5_udp_sendmmsg_udp (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
 {
     struct iovec iov[num * 3];
     struct mmsghdr mvec[num];
-    HevSocks5UDPHdr udp[num];
+    uint8_t rsv[3] = { 0 };
     int i, res;
 
     for (i = 0; i < num; i++) {
@@ -206,22 +210,12 @@ hev_socks5_udp_sendmmsg_udp (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
             return -1;
         }
 
-        udp[i].datlen = 0;
-        udp[i].hdrlen = 0;
-
-        iov[i * 3].iov_base = &udp[i];
-        iov[i * 3].iov_len = 3;
+        iov[i * 3].iov_base = rsv;
+        iov[i * 3].iov_len = sizeof (rsv);
         iov[i * 3 + 1].iov_base = msgv[i].addr;
         iov[i * 3 + 1].iov_len = addrlen;
         iov[i * 3 + 2].iov_base = msgv[i].buf;
         iov[i * 3 + 2].iov_len = msgv[i].len;
-
-        mvec[i].msg_hdr.msg_name = NULL;
-        mvec[i].msg_hdr.msg_namelen = 0;
-        mvec[i].msg_hdr.msg_control = NULL;
-        mvec[i].msg_hdr.msg_controllen = 0;
-        mvec[i].msg_hdr.msg_iov = &iov[i * 3];
-        mvec[i].msg_hdr.msg_iovlen = 3;
     }
 
 #if defined(__linux__) && defined(UDP_SEGMENT)
@@ -229,11 +223,17 @@ hev_socks5_udp_sendmmsg_udp (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
         udp_gso_max_size = hev_socks5_udp_gso_probe ();
 
     if ((num > 1) && udp_gso_max_size) {
-        res = hev_socks5_udp_sendmmsg_udp_gso (self, msgv, num, iov);
+        res = hev_socks5_udp_sendmmsg_udp_gso (self, msgv, num, iov, mvec);
         if ((res > 0) || ((errno != EINVAL) && (errno != EMSGSIZE)))
             return res;
     }
 #endif /* __linux__ && UDP_SEGMENT */
+
+    memset (mvec, 0, sizeof (mvec));
+    for (i = 0; i < num; i++) {
+        mvec[i].msg_hdr.msg_iov = &iov[i * 3];
+        mvec[i].msg_hdr.msg_iovlen = 3;
+    }
 
     res = hev_task_io_socket_sendmmsg (hev_socks5_udp_get_fd (self), mvec, num,
                                        MSG_WAITALL, task_io_yielder, self);
