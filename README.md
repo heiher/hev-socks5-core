@@ -204,6 +204,7 @@ defined as follows:
 * **mmjvox** - https://github.com/mmjvox
 * **sergey larin** - https://github.com/cerg2010cerg2010
 * **spider84** - https://github.com/spider84
+* **starproxima** - https://github.com/starproxima
 
 ## License
 MIT
