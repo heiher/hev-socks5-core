@@ -32,6 +32,15 @@ hev_socks5_tcp_splicer (HevSocks5TCP *self, int fd)
     if (res < 0)
         hev_task_mod_fd (task, fd, POLLIN | POLLOUT);
 
+    /* Relay data as it arrives: when a message spans several relay writes,
+     * Nagle combined with the peer's delayed ACK holds back its tail. */
+    res = hev_socks5_socket_set_nodelay (cfd);
+    if (res < 0)
+        LOG_D ("%p socks5 tcp splicer nodelay fd %d", self, cfd);
+    res = hev_socks5_socket_set_nodelay (fd);
+    if (res < 0)
+        LOG_D ("%p socks5 tcp splicer nodelay fd %d", self, fd);
+
     hev_task_io_splice (cfd, cfd, fd, fd, 8192, task_io_yielder, self);
 
     return 0;
