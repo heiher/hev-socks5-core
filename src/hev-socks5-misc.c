@@ -10,6 +10,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <hev-sys.h>
+#ifndef _WIN32
+#include <netinet/tcp.h>
+#endif
 
 #include <hev-task.h>
 #include <hev-task-io.h>
@@ -86,6 +89,15 @@ hev_socks5_socket (int type)
     }
 
     return fd;
+}
+
+int
+hev_socks5_socket_set_nodelay (int fd)
+{
+    int one = 1;
+
+    return hev_task_io_socket_setsockopt (fd, IPPROTO_TCP, TCP_NODELAY, &one,
+                                          sizeof (one));
 }
 
 const char *
