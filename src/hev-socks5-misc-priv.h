@@ -23,7 +23,6 @@ extern "C" {
 #endif
 
 int hev_socks5_socket (int type);
-int hev_socks5_socket_set_nodelay (int fd);
 
 const char *hev_socks5_addr_into_str (const HevSocks5Addr *addr, char *buf,
                                       int len);
