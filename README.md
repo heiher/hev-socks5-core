@@ -205,6 +205,7 @@ defined as follows:
 * **sergey larin** - https://github.com/cerg2010cerg2010
 * **spider84** - https://github.com/spider84
 * **starproxima** - https://github.com/starproxima
+* **tdmrx** - https://github.com/tdmrx
 
 ## License
 MIT
