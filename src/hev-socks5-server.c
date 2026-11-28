@@ -397,6 +397,8 @@ static int
 hev_socks5_server_bind (HevSocks5Server *self, struct sockaddr_in6 *addr)
 {
     HevSocks5ServerClass *sskptr = HEV_OBJECT_GET_CLASS (self);
+    struct sockaddr_in6 local;
+    socklen_t alen;
     int one = 1;
     int res;
     int fd;
@@ -414,6 +416,16 @@ hev_socks5_server_bind (HevSocks5Server *self, struct sockaddr_in6 *addr)
     if (!addr)
         return 0;
 
+    alen = sizeof (struct sockaddr_in6);
+    res = hev_task_io_socket_getsockname (HEV_SOCKS5 (self)->fd,
+                                          (struct sockaddr *)&local, &alen);
+    if (res < 0) {
+        LOG_W ("%p socks5 server tcp socket name", self);
+        return -1;
+    }
+
+    local.sin6_port = 0;
+
     fd = hev_socks5_socket (SOCK_DGRAM);
     if (fd < 0) {
         LOG_E ("%p socks5 server socket dgram", self);
@@ -429,13 +441,15 @@ hev_socks5_server_bind (HevSocks5Server *self, struct sockaddr_in6 *addr)
         return -1;
     }
 
-    res = sskptr->binder (self, fd, addr);
+    res = sskptr->binder (self, fd, addr, &local);
     if (res < 0) {
         LOG_W ("%p socks5 server bind", self);
         hev_task_del_fd (hev_task_self (), fd);
         hev_task_io_close (fd);
         return -1;
     }
+
+    *addr = local;
 
     self->fds[1] = fd;
 
@@ -444,29 +458,23 @@ hev_socks5_server_bind (HevSocks5Server *self, struct sockaddr_in6 *addr)
 
 static int
 hev_socks5_server_udp_bind (HevSocks5Server *self, int sock,
-                            struct sockaddr_in6 *src)
+                            const struct sockaddr_in6 *client,
+                            struct sockaddr_in6 *local)
 {
-    socklen_t alen;
+    socklen_t len;
     int res;
 
     LOG_D ("%p socks5 server udp bind", self);
 
-    alen = sizeof (struct sockaddr_in6);
-    res = hev_task_io_socket_getsockname (HEV_SOCKS5 (self)->fd,
-                                          (struct sockaddr *)src, &alen);
-    if (res < 0) {
-        LOG_W ("%p socks5 server tcp socket name", self);
-        return -1;
-    }
-
-    src->sin6_port = 0;
-    res = hev_task_io_socket_bind (sock, (struct sockaddr *)src, alen);
+    res = hev_task_io_socket_bind (sock, (struct sockaddr *)local,
+                                   sizeof (struct sockaddr_in6));
     if (res < 0) {
         LOG_W ("%p socks5 server socket bind", self);
         return -1;
     }
 
-    res = hev_task_io_socket_getsockname (sock, (struct sockaddr *)src, &alen);
+    len = sizeof (struct sockaddr_in6);
+    res = hev_task_io_socket_getsockname (sock, (struct sockaddr *)local, &len);
     if (res < 0) {
         LOG_W ("%p socks5 server udp socket name", self);
         return -1;
