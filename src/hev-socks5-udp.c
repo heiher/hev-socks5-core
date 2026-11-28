@@ -399,6 +399,12 @@ hev_socks5_udp_recvmmsg_udp (HevSocks5UDP *self, HevSocks5UDPMsg *msgv,
             continue;
         }
 
+        if (udp->rsv[2]) {
+            msgv[i].addr = NULL;
+            msgv[i].len = 0;
+            continue;
+        }
+
         if (addrlen <= 0) {
             LOG_D ("%p socks5 udp addr", self);
             msgv[i].addr = NULL;
