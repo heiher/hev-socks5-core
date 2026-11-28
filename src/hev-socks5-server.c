@@ -7,6 +7,7 @@
  ============================================================================
  */
 
+#include <errno.h>
 #include <string.h>
 #include <hev-sys.h>
 
@@ -394,6 +395,39 @@ hev_socks5_server_connect (HevSocks5Server *self, struct sockaddr_in6 *addr)
 }
 
 static int
+hev_socks5_server_addr_is_any (struct sockaddr_in6 *addr)
+{
+    if (!IN6_IS_ADDR_V4MAPPED (&addr->sin6_addr))
+        return !memcmp (&addr->sin6_addr, &in6addr_any, 16);
+
+    return !memcmp (&addr->sin6_addr.s6_addr[12], &in6addr_any, 4);
+}
+
+static int
+hev_socks5_server_udp_peer (HevSocks5Server *self, struct sockaddr_in6 *addr)
+{
+    struct sockaddr_in6 peer;
+    socklen_t alen;
+    int res;
+
+    if (!hev_socks5_server_addr_is_any (addr))
+        return 0;
+
+    alen = sizeof (struct sockaddr_in6);
+    res = hev_task_io_socket_getpeername (HEV_SOCKS5 (self)->fd,
+                                          (struct sockaddr *)&peer, &alen);
+    if (res < 0) {
+        LOG_W ("%p socks5 server tcp peer name", self);
+        return -1;
+    }
+
+    peer.sin6_port = addr->sin6_port;
+    *addr = peer;
+
+    return 0;
+}
+
+static int
 hev_socks5_server_bind (HevSocks5Server *self, struct sockaddr_in6 *addr)
 {
     HevSocks5ServerClass *sskptr = HEV_OBJECT_GET_CLASS (self);
@@ -415,6 +449,10 @@ hev_socks5_server_bind (HevSocks5Server *self, struct sockaddr_in6 *addr)
 
     if (!addr)
         return 0;
+
+    res = hev_socks5_server_udp_peer (self, addr);
+    if (res < 0)
+        return -1;
 
     alen = sizeof (struct sockaddr_in6);
     res = hev_task_io_socket_getsockname (HEV_SOCKS5 (self)->fd,
@@ -456,6 +494,21 @@ hev_socks5_server_bind (HevSocks5Server *self, struct sockaddr_in6 *addr)
     return 0;
 }
 
+static void
+hev_socks5_server_udp_drain (int fd)
+{
+    char buf;
+
+    for (;;) {
+        ssize_t res;
+
+        res = hev_task_io_socket_recv (fd, &buf, sizeof (buf), MSG_DONTWAIT,
+                                       NULL, NULL);
+        if (res < 0 && errno != EMSGSIZE)
+            break;
+    }
+}
+
 static int
 hev_socks5_server_udp_bind (HevSocks5Server *self, int sock,
                             const struct sockaddr_in6 *client,
@@ -472,6 +525,17 @@ hev_socks5_server_udp_bind (HevSocks5Server *self, int sock,
         LOG_W ("%p socks5 server socket bind", self);
         return -1;
     }
+
+    res = hev_task_io_socket_connect (sock, (struct sockaddr *)client,
+                                      sizeof (struct sockaddr_in6),
+                                      task_io_yielder, self);
+    if (res < 0) {
+        LOG_W ("%p socks5 server socket connect", self);
+        return -1;
+    }
+
+    hev_socks5_server_udp_drain (sock);
+    HEV_SOCKS5 (self)->udp_associated = !!client->sin6_port;
 
     len = sizeof (struct sockaddr_in6);
     res = hev_task_io_socket_getsockname (sock, (struct sockaddr *)local, &len);
